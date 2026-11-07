@@ -46,7 +46,9 @@ void ANyWorldState::CreateCollisionGround(){
  if(!Ground)return;
  Ground->SetReplicates(false); // Created locally on server and clients at identical coordinates.
  UStaticMeshComponent* Mesh=Ground->GetStaticMeshComponent();
- Mesh->SetMobility(EComponentMobility::Movable);
+ // A runtime ground is a fixed terrain surface; a Movable root caused
+ // authoritative construction to reject it (building requires Static ground).
+ Mesh->SetMobility(EComponentMobility::Static);
  Mesh->SetStaticMesh(Cube);
  Mesh->SetCollisionProfileName(TEXT("BlockAll"));
  Ground->SetActorScale3D(FVector(85,85,2));
