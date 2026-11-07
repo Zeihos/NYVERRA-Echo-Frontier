@@ -16,7 +16,7 @@ ANyBuildPiece::ANyBuildPiece(){
 void ANyBuildPiece::Initialize(uint8 NewType){if(!HasAuthority())return;PieceType=NewType;OnRep_Type();ForceNetUpdate();}
 void ANyBuildPiece::OnRep_Type(){
  // 0: foundation 300x300x30; 1: wall 300x30x250
- SetActorScale3D(PieceType==0?FVector(3.f,3.f,.3f):FVector(3.f,.3f,2.5f));
+ SetActorScale3D(PieceType==0?FVector(3.f,3.f,.3f):FVector(2.4f,.3f,2.5f));
 }
 void ANyBuildPiece::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const{
  Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(ANyBuildPiece,PieceType);
