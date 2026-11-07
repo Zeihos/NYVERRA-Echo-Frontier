@@ -24,3 +24,8 @@ Thumbs.db
 .env.*
 *.pem
 *.key
+
+# Local build diagnostics and editor map-config backups
+BUILD_ALPHA_*.log
+BUILD_ALPHA_*_ERRORS.txt
+*.ini.bak
