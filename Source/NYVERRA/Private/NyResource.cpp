@@ -35,7 +35,7 @@ bool ANyResource::Harvest(int32& Award,int32 Requested){
  if(Remaining<=0) Destroy(); else ForceNetUpdate();
  return true;
 }
-void ANyResource::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out)const{
- Super::GetLifetimeReplicatedProps(Out);
+void ANyResource::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const{
+ Super::GetLifetimeReplicatedProps(OutLifetimeProps);
  DOREPLIFETIME(ANyResource,Remaining);DOREPLIFETIME(ANyResource,Kind);
 }
