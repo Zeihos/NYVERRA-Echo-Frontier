@@ -1,0 +1,21 @@
+NYVERRA: ECHO FRONTIER — FIRST PLAY ALPHA 0.53
+
+1. Install Unreal Engine 5.8 and Visual Studio 2022 C++ tools for Unreal Engine.
+2. Close Unreal Editor before running the batch script.
+3. Run BUILD_AND_PREPARE_ALPHA_053_WINDOWS.bat
+   If UE installed elsewhere, run:
+   BUILD_AND_PREPARE_ALPHA_053_WINDOWS.bat "D:\Epic Games\UE_5.8"
+4. The script compiles C++, creates Content/Maps/TestWorld.umap via Unreal's Python,
+   and assigns TestWorld as startup, editor, and server map.
+   It NEVER overwrites an already existing /Game/Maps/TestWorld.
+5. Open NYVERRA.uproject in Unreal Editor. Open TestWorld, Build > Build Paths,
+   press P to inspect green walkable NavMesh, then Save.
+6. In Editor play settings: Number of Players = 2, Net Mode = Play As Listen Server,
+   then Play. Test movement, sprint, jumps, harvest and crafting.
+
+On build failure: BUILD_ALPHA_051.log and BUILD_ALPHA_051_ERRORS.txt
+On map creation failure: BUILD_ALPHA_053_MAP.log
+Do NOT commit Saved/, Intermediate/, DerivedDataCache/, Binaries/, or logs.
+
+IMPORTANT: Does NOT guarantee UE compilation, map correctness, AI navigation,
+network correctness, realistic visual quality or Windows shipping build.
