@@ -117,7 +117,7 @@ void ANyEnemy::Think(){
  LastAttackTime=Now;
  Victim->ReceiveCombatDamage(10.f,nullptr);
 }
-float ANyEnemy::TakeDamage(float Amount,const FDamageEvent& Event,AController* Instigator,AActor* Causer){
+float ANyEnemy::TakeDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer){
  if(!HasAuthority()||bDead||!FMath::IsFinite(Amount)||Amount<=0.f)return 0.f;
  const float Applied=FMath::Min(Health,Amount);
  Health=FMath::Max(0.f,Health-Amount);
@@ -134,8 +134,8 @@ float ANyEnemy::TakeDamage(float Amount,const FDamageEvent& Event,AController* I
  }
  ForceNetUpdate();return Applied;
 }
-void ANyEnemy::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out)const{
- Super::GetLifetimeReplicatedProps(Out);
+void ANyEnemy::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const{
+ Super::GetLifetimeReplicatedProps(OutLifetimeProps);
  DOREPLIFETIME(ANyEnemy,Health);
  DOREPLIFETIME(ANyEnemy,bDead);
  DOREPLIFETIME(ANyEnemy,bAlerted);
