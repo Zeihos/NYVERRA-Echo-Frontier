@@ -8,8 +8,10 @@ void ANyHUD::DrawHUD(){
  Super::DrawHUD();
  if(!Canvas)return;
  const float X=Canvas->SizeX,Y=Canvas->SizeY;
- DrawText(TEXT("NYVERRA  /  ECHO FRONTIER   -   ALPHA 0.11"),FLinearColor(0.1f,0.9f,0.9f),28,28,nullptr,1.2f);
- DrawText(TEXT("WASD move  |  mouse look  |  Space jump  |  Shift sprint  |  LMB attack  |  E gather  |  1 foundation  |  2 wall  |  F eat berries  |  3 axe  |  4 pickaxe  |  I inventory  |  Tab cursor"),FLinearColor::White,28,63);
+ DrawText(TEXT("NYVERRA / ECHO FRONTIER  -  DEVELOPMENT BUILD"),FLinearColor(0.1f,0.9f,0.9f),28,24,nullptr,1.1f);
+ // Two short control rows stay readable on typical 1366px and 1920px screens.
+ DrawText(TEXT("WASD MOVE  |  MOUSE LOOK  |  SPACE JUMP  |  SHIFT SPRINT  |  LMB ATTACK  |  E GATHER  |  I INVENTORY"),FLinearColor::White,28,56,nullptr,0.9f);
+ DrawText(TEXT("1 FOUNDATION  |  2 WALL  |  3 AXE  |  4 PICKAXE  |  F EAT BERRIES  |  TAB CURSOR"),FLinearColor(.77f,.87f,.91f),28,78,nullptr,0.9f);
  if(const ANyCharacter* P=Cast<ANyCharacter>(GetOwningPawn())){
   const FString Info=FString::Printf(TEXT("WOOD  %d     STONE  %d     ECHO  %d     BERRIES  %d"),P->Wood,P->Stone,P->Echo,P->Berries);
   FString Slots=FString::Printf(TEXT("INVENTORY %d / %d  |  AXE %d  |  PICKAXE %d"),P->Inventory.Num(),P->MaxSlots,P->CountItem(ENyItemId::Axe),P->CountItem(ENyItemId::Pickaxe));
@@ -38,9 +40,13 @@ void ANyHUD::DrawHUD(){
   DrawText(FString::Printf(TEXT("HP  %.0f    HUNGER  %.0f    THIRST  %.0f    STAMINA  %.0f"),P->Health,P->Hunger,P->Thirst,P->Stamina),FLinearColor::White,28,Y-99);
  }
  if(const ANyWorldState* State=GetWorld()?GetWorld()->GetGameState<ANyWorldState>():nullptr){
-  DrawText(FString::Printf(TEXT("TIME %02d:%02d  |  WEATHER %s  (%ds)"),FMath::FloorToInt(State->TimeOfDayHours),FMath::FloorToInt(FMath::Frac(State->TimeOfDayHours)*60.f),State->bRainActive?TEXT("RAIN / FOG"):TEXT("CLEAR"),State->WeatherSeconds),FLinearColor(.7f,.85f,1.f),28,119);
-  DrawText(FString::Printf(TEXT("ECHO: %s  |  %ds"),State->bEchoActive?TEXT("ACTIVE"):TEXT("CALM"),State->EchoSeconds),State->bEchoActive?FLinearColor(1.f,.45f,.25f):FLinearColor(.2f,.85f,1.f),28,94);
+  DrawText(FString::Printf(TEXT("TIME %02d:%02d  |  WEATHER %s  (%ds)"),FMath::FloorToInt(State->TimeOfDayHours),FMath::FloorToInt(FMath::Frac(State->TimeOfDayHours)*60.f),State->bRainActive?TEXT("RAIN / FOG"):TEXT("CLEAR"),State->WeatherSeconds),FLinearColor(.7f,.85f,1.f),28,150);
+  DrawText(FString::Printf(TEXT("ECHO: %s  |  %ds"),State->bEchoActive?TEXT("ACTIVE"):TEXT("CALM"),State->EchoSeconds),State->bEchoActive?FLinearColor(1.f,.45f,.25f):FLinearColor(.2f,.85f,1.f),28,123);
  }
- DrawLine(X*.5f-9,Y*.5f,X*.5f+9,Y*.5f,FLinearColor::White,1.5f);
- DrawLine(X*.5f,Y*.5f-9,X*.5f,Y*.5f+9,FLinearColor::White,1.5f);
+ // Don't draw a combat reticle over the open inventory panel.
+ const ANyCharacter* LocalPawn=Cast<ANyCharacter>(GetOwningPawn());
+ if(!LocalPawn || !LocalPawn->bInventoryOpen){
+  DrawLine(X*.5f-9,Y*.5f,X*.5f+9,Y*.5f,FLinearColor::White,1.5f);
+  DrawLine(X*.5f,Y*.5f-9,X*.5f,Y*.5f+9,FLinearColor::White,1.5f);
+ }
 }
