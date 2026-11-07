@@ -26,7 +26,12 @@ bool ANyLootCrate::TryLoot(ANyCharacter* Player){
 }
 void ANyLootCrate::RespawnLoot(){if(!HasAuthority())return;bAvailable=true;ApplyAppearance();ForceNetUpdate();}
 void ANyLootCrate::OnRep_LootState(){ApplyAppearance();}
-void ANyLootCrate::ApplyAppearance(){if(Mesh)Mesh->SetVisibility(bAvailable,true);}
+void ANyLootCrate::ApplyAppearance(){
+ if(!Mesh)return;
+ Mesh->SetVisibility(bAvailable,true);
+ // A looted (invisible) crate must not block walking, melee traces or building.
+ Mesh->SetCollisionEnabled(bAvailable?ECollisionEnabled::QueryAndPhysics:ECollisionEnabled::NoCollision);
+}
 void ANyLootCrate::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const{
  Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(ANyLootCrate,bAvailable);
 }
