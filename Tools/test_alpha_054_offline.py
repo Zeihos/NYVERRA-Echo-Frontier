@@ -77,6 +77,22 @@ class TestGameplaySourceInvariants(unittest.TestCase):
         self.assertLess(script.index("if not MAP_FILE.is_file()"), script.index("set_test_world_default.py"))
         self.assertIn("TestWorld exists", read("Tools/create_test_world.py"))
 
+    def test_multiplayer_respawn_avoids_crowded_spawn(self):
+        cpp = read("Source/NYVERRA/Private/NyCharacter.cpp")
+        respawn = cpp.split("void ANyCharacter::RespawnAfterDeath(){")[1].split("void ANyCharacter::PlaceFoundation()")[0]
+        self.assertIn("BestClearanceSquared", respawn)
+        self.assertIn("TActorIterator<APlayerStart>", respawn)
+        self.assertIn("TActorIterator<ANyCharacter>", respawn)
+        self.assertIn("Other->bIsDead", respawn)
+        self.assertIn("NearestPlayerSquared>BestClearanceSquared", respawn)
+
+    def test_hud_does_not_draw_combat_crosshair_over_inventory(self):
+        cpp = read("Source/NYVERRA/Private/NyHUD.cpp")
+        self.assertIn("DEVELOPMENT BUILD", cpp)
+        self.assertNotIn("ALPHA 0.11", cpp)
+        self.assertIn("if(!LocalPawn || !LocalPawn->bInventoryOpen)", cpp)
+        self.assertLess(cpp.index("if(!LocalPawn || !LocalPawn->bInventoryOpen)"), cpp.index("DrawLine(X*.5f-9"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
