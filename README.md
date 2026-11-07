@@ -2,7 +2,7 @@
 
 Private Unreal Engine 5.8 C++ multiplayer survival prototype (Windows; PvP/PvE, building, crafting).
 
-**Latest sources: Alpha 0.53 + UE 5.8 compilation fixes (Nov 2026).** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
+**Latest sources: Alpha 0.53 + UE 5.8 compilation fixes + November core-polish pass.** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
 
 ## First playable test map
 
@@ -34,3 +34,42 @@ The 52 historical Alpha ZIPs were **not uploaded** in the first GitHub commit. T
 ## Offline checks
 
 `py -3 Tools/test_alpha_053_offline.py` — uses mock Unreal APIs to test map creation, re-run safety, INI update failure handling and two C++ source invariants. These tests are **not** an Unreal Engine compile or playtest.
+
+
+## Core gameplay polish (8 November 2026)
+
+The existing survival prototype was audited and the following **source-code fixes** are on `main`:
+
+- Resources no longer get permanently destroyed on depletion: zero remaining hides and disables collision; after 120 s on the server they replenish and replicate the state.
+- Empty shared loot crates also stop blocking collision until they refill.
+- Mining with an axe/pickaxe can collect the final unit from a nearly empty node.
+- Four initial PvE enemy actors now recover after 90 s, restoring health, navigation movement, visibility and collision across server/clients.
+- Authored sun and fog actors are reused instead of unconditionally spawning duplicate lights.
+- Respawn chooses a PlayerStart farthest from living players (best of the available starts).
+- Walls can attach to the nearest side of a foundation and use corner-safe mesh extents.
+- HUD controls were split into two readable lines; inventory no longer shows a combat crosshair.
+
+These code changes have **not** been compiled or playtested in Unreal Editor after the changes. Offline tests check code structure, not runtime behavior.
+
+### Windows checks
+
+```bat
+git pull origin main
+py -3 -m unittest discover -s Tools -p "test_alpha_*.py" -v
+```
+
+GitHub Actions runs the same offline checks on push. A green offline workflow is **not** evidence of a working Unreal build.
+
+### Authored TestWorld still needs upload
+
+The tested `Content/Maps/TestWorld.umap` currently exists only on the tester's Windows machine, not this repository.
+
+From a clean local clone, use:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Sync-TestWorld-ToGitHub.ps1 -MapFile "C:\PATH\TO\TESTED\PROJECT\Content\Maps\TestWorld.umap"
+```
+
+The script checks `main`, the exact remote, clean working tree and existing map hashes. It refuses to overwrite an unrelated map, updates all three default-map keys and pushes the authored `.umap`. Custom `.uasset` dependencies, if any, must be synced separately.
+
+**Still unverified:** Windows C++ build after this polish pass; actual saved-map compatibility; two-player PIE networking; AI navigation after respawn; building four walls on a foundation; dedicated-server build; packaged game; release-quality visuals. The 52 historical Alpha ZIP archives are also still missing from GitHub.
