@@ -1,0 +1,18 @@
+NYVERRA Alpha 0.53 — 2026-11-07
+
+Game code
+- ANyBuildPiece constructor now sets the initial foundation actor scale to 3x3x0.3.
+  The default PieceType=0 might never trigger its OnRep on newly connected clients.
+- ANyWorldState runtime fallback collision ground now uses Static mobility,
+  aligning it with the server's Static-only building placement rule.
+
+Editor / first launch
+- Tools/bootstrap_alpha_053.py creates /Game/Maps/TestWorld only if absent,
+  verifies Content/Maps/TestWorld.umap and updates startup maps only afterward.
+- BUILD_AND_PREPARE_ALPHA_053_WINDOWS.bat compiles NYVERRAEditor first,
+  then invokes the Unreal Editor Python pipeline and checks the saved .umap and INI.
+- Tools/test_alpha_053_offline.py checks map bootstrap behavior with Unreal API mocks,
+  duplicate protection, fail-safe map assignment, and essential source invariants.
+
+Build status: Offline validations only. C++ compile and actual Unreal Editor run
+cannot be verified here (requires UE5.8 / Visual Studio on Windows).
