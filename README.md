@@ -1,27 +1,34 @@
 # NYVERRA: Echo Frontier
 
-**Private development repository — UE5.8 / Windows / multiplayer / PvPvE / seasonal wipes.**
+Private Unreal Engine 5.8 C++ multiplayer survival prototype (Windows; PvP/PvE, building, crafting).
 
-## Состав
+**Latest sources: Alpha 0.53.** Not a playable release. C++ compilation, UE Editor map generation, Windows launch, and two-player network correctness **are not yet verified**.
 
-- `NYVERRA.uproject`, `Source/`, `Config/`, `Content/`, `Tools/` и прочие файлы корня — актуальные исходники **Alpha 0.52** (без временного Python-кэша).
-- `History/UE5_Alpha_Archives/` — все **52 исходных ZIP-архива Alpha 0.1–0.52**, сохранённые без изменений.
-- `History/Early_2D_Prototype/` — оригинальный ранний 2D-прототип, для истории, **не** основная игра.
-- `Documentation/` — утверждённые GDD v1.0 и техническое задание v1.0 в формате DOCX.
-- `HISTORY_CHECKSUMS_SHA256.txt` — контрольные суммы версий для проверки архива.
-- `PUSH_TO_GITHUB_PRIVATE.bat` — отправка локальных файлов в **уже созданный** приватный GitHub-репозиторий.
+## First playable test map
 
-## Состояние проекта
+On Windows with UE 5.8 and Visual Studio C++ tools:
 
-Alpha 0.52 содержит **экспериментальные исходники** Unreal Engine. Полная компиляция в UE5.8, мультиплеерные тесты и запуск на Windows **не подтверждены**. Отсутствует готовый сохранённый `.umap` игрового уровня. Не заявлять готовность к релизу до реальной проверки.
+1. Close Unreal Editor and run `BUILD_AND_PREPARE_ALPHA_053_WINDOWS.bat` next to `NYVERRA.uproject`.
+2. If Unreal is installed elsewhere, pass the engine directory as argument, e.g. `BUILD_AND_PREPARE_ALPHA_053_WINDOWS.bat "D:\UE_5.8"`.
+3. The script builds `NYVERRAEditor`, generates a saved `Content/Maps/TestWorld.umap` only if missing, and selects it as the Game/Editor/Server default map.
+4. Open `NYVERRA.uproject`, build navigation paths and save `TestWorld` in Unreal Editor.
+5. Run 2 players in PIE (Play As Listen Server) and record errors for the next development pass.
 
-## Разработка
+See `FIRST_PLAY_ALPHA_053_RU.txt` for more details. Failure logs: `BUILD_ALPHA_051.log`, `BUILD_ALPHA_051_ERRORS.txt`, `BUILD_ALPHA_053_MAP.log`.
 
-1. Установить Unreal Engine 5.8, Visual Studio с C++ toolchain.
-2. Открыть `NYVERRA.uproject` и выполнить сборку модуля редактора.
-3. Записать журнал компиляции и исправить ошибки, если они появятся.
-4. Создать и сохранить тестовую `.umap` карту, затем проверить игру с двумя клиентами.
+## Source structure
 
-## GitHub
+- `Source/NYVERRA/` — game code for survival, AI, building, loot and replication.
+- `Config/` — project settings and input.
+- `Content/TerrainSource/` — terrain source art, not an authored `.umap` map.
+- `Tools/` — offline generators, Unreal Editor Python scripts and tests.
+- `Documentation/` — game design and technical specification (if included in your checkout).
+- `History/Early_2D_Prototype/` — legacy historical prototype, not the current game.
 
-**Репозиторий для отправки:** `Zeihos/NYVERRA-Echo-Frontier` (Private). Запустите `PUSH_TO_GITHUB_PRIVATE.bat` после распаковки всего архива. Инструкции см. `GITHUB_UPLOAD_INSTRUCTIONS_RU.txt`.
+### Earlier Alpha archives
+
+The 52 historical Alpha ZIPs were **not uploaded** in the first GitHub commit. They are available in the separately supplied history archive parts. To preserve every binary archive in GitHub, upload `History/UE5_Alpha_Archives/` from the complete local package. Do not assume that the history folder already exists in this repository.
+
+## Offline checks
+
+`py -3 Tools/test_alpha_053_offline.py` — uses mock Unreal APIs to test map creation, re-run safety, INI update failure handling and two C++ source invariants. These tests are **not** an Unreal Engine compile or playtest.
