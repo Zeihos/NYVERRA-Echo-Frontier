@@ -323,8 +323,10 @@ void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  // cannot stack, and no structure may be built on top of an existing wall.
  ANyBuildPiece* Foundation=Cast<ANyBuildPiece>(GroundHit.GetActor());
  if(Foundation && (Type!=1 || Foundation->PieceType!=0))return;
- if(GroundHit.ImpactNormal.Z<0.85f || !GroundHit.GetComponent() ||
-    GroundHit.GetComponent()->Mobility!=EComponentMobility::Static)return;
+ if(GroundHit.ImpactNormal.Z<0.85f || !GroundHit.GetComponent())return;
+ // Authoritative foundations are explicit valid supports even if their
+ // runtime-spawned mesh component reports Movable on this engine version.
+ if(!Foundation && GroundHit.GetComponent()->Mobility!=EComponentMobility::Static)return;
  // 240 cm wall length + 30 cm thickness allows neighboring perpendicular
  // walls to meet at corners without collider overlap. Foundation is 300x300.
  const FVector Extent=Type==0?FVector(150.f,150.f,15.f):FVector(120.f,15.f,125.f);
