@@ -9,6 +9,7 @@
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/ExponentialHeightFog.h"
+#include "EngineUtils.h"
 #include "UObject/UObjectGlobals.h"
 
 ANyWorldState::ANyWorldState(){ bReplicates=true; PrimaryActorTick.bCanEverTick=true; }
@@ -204,13 +205,31 @@ void ANyWorldState::GenerateLocalTerrain(){
  UE_LOG(LogTemp,Display,TEXT("[NYVERRA Alpha 0.6] instanced forest generated locally"));
 }
 void ANyWorldState::CreateAtmosphere(){
- if(UWorld* W=GetWorld()){
-  Sun=W->SpawnActor<ADirectionalLight>(FVector(0,0,1000),FRotator(-38,-32,0));
-  Fog=W->SpawnActor<AExponentialHeightFog>(FVector(0,0,0),FRotator::ZeroRotator);
-  if(Sun)Sun->SetReplicates(false);
-  if(Fog)Fog->SetReplicates(false);
-  UpdateAtmosphere();
+ UWorld* W=GetWorld();
+ if(!W)return;
+ // Respect authored lighting in Basic/TestWorld. Spawning a second directional
+ // light caused duplicate-sun warnings and inconsistent day/night rendering.
+ for(TActorIterator<ADirectionalLight> It(W);It;++It){
+  if(IsValid(*It)){Sun=*It;break;}
  }
+ for(TActorIterator<AExponentialHeightFog> It(W);It;++It){
+  if(IsValid(*It)){Fog=*It;break;}
+ }
+ if(!Sun){
+  Sun=W->SpawnActor<ADirectionalLight>(FVector(0,0,1000),FRotator(-38,-32,0));
+  if(Sun)Sun->SetReplicates(false);
+ }
+ if(!Fog){
+  Fog=W->SpawnActor<AExponentialHeightFog>(FVector(0,0,0),FRotator::ZeroRotator);
+  if(Fog)Fog->SetReplicates(false);
+ }
+ // Time of day updates transform and intensity, which require a movable sun.
+ if(Sun){
+  if(UDirectionalLightComponent* Light=Sun->GetComponent()){
+   Light->SetMobility(EComponentMobility::Movable);
+  }
+ }
+ UpdateAtmosphere();
 }
 void ANyWorldState::UpdateAtmosphere(){
  bLastEcho=bEchoActive;
