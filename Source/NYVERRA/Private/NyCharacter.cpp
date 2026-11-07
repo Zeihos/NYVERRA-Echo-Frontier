@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "NyBuildPiece.h"
 #include "Engine/World.h"
+#include "Engine/OverlapResult.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PrimitiveComponent.h"
@@ -376,8 +377,8 @@ void ANyCharacter::ServerInteract_Implementation(){
  if (!AddItem(Item, Harvested))
   UE_LOG(LogTemp, Error, TEXT("[NYVERRA] Inventory credit failed after harvest; verify resource transaction"));
 }
-void ANyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out)const{
- Super::GetLifetimeReplicatedProps(Out);
+void ANyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const{
+ Super::GetLifetimeReplicatedProps(OutLifetimeProps);
  DOREPLIFETIME(ANyCharacter,bWantsSprint);
  DOREPLIFETIME(ANyCharacter,bIsDead);DOREPLIFETIME(ANyCharacter,DeathCount);
  DOREPLIFETIME(ANyCharacter,Inventory);DOREPLIFETIME(ANyCharacter,Health);DOREPLIFETIME(ANyCharacter,Hunger);
