@@ -20,5 +20,5 @@ jobs:
           python-version: '3.11'
       - name: Check Python syntax
         run: python -m compileall -q Tools
-      - name: Alpha 0.53 mock UE regression tests
-        run: python Tools/test_alpha_053_offline.py
+      - name: Alpha 0.53 editor bootstrap and Alpha 0.54 gameplay source checks
+        run: python -m unittest discover -s Tools -p "test_alpha_*.py" -v
