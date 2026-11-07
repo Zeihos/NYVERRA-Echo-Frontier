@@ -65,7 +65,7 @@ void ANyGameMode::BeginPlay(){
   NyEnsureFallbackPlayerStarts(GetWorld());
   // A saved level must contain an editor-authored NavMeshBoundsVolume.
   // Runtime-spawned volumes cannot reliably guarantee built navigation on a packaged server.
-  if(const UNavigationSystemV1* Nav=FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld())){
+  if(UNavigationSystemV1* Nav=FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld())){
    if(!Nav->GetDefaultNavDataInstance(FNavigationSystem::DontCreate))
     UE_LOG(LogTemp,Warning,TEXT("[NYVERRA 0.16] No NavData: create a saved test map and add NavMeshBoundsVolume before testing PvE AI."));
   }
