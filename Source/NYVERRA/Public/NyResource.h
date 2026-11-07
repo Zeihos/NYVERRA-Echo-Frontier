@@ -19,5 +19,11 @@ public:
  bool Harvest(int32& Award, int32 Requested=1);
  virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 private:
+ // InitialRemaining is authoritative server state; no client-side timers.
+ int32 InitialRemaining = 5;
+ FTimerHandle RespawnTimer;
+ UPROPERTY(EditDefaultsOnly, Category="Resource") float RespawnSeconds = 120.f;
+ void RespawnResource();
  void UpdateLook();
+ void UpdateAvailability();
 };
