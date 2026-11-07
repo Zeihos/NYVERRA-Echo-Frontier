@@ -371,9 +371,11 @@ void ANyCharacter::ServerInteract_Implementation(){
  int32 Capacity = (MaxSlots - Inventory.Num()) * MaxStack;
  for (const FNyItemStack& Stack : Inventory)
   if (Stack.Item == Item) Capacity += FMath::Max(0, MaxStack - Stack.Quantity);
- if (Resource->Remaining < Award || Capacity < Award) return;
+ // A tool can collect two units, but one remaining unit must still be harvestable.
+ const int32 Requested=FMath::Min(Award,Resource->Remaining);
+ if(Requested<=0 || Capacity<Requested)return;
  int32 Harvested = 0;
- if (!Resource->Harvest(Harvested, Award) || Harvested <= 0) return;
+ if (!Resource->Harvest(Harvested, Requested) || Harvested <= 0) return;
  if (!AddItem(Item, Harvested))
   UE_LOG(LogTemp, Error, TEXT("[NYVERRA] Inventory credit failed after harvest; verify resource transaction"));
 }
