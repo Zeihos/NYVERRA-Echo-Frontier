@@ -2,7 +2,7 @@
 
 Private Unreal Engine 5.8 C++ multiplayer survival prototype (Windows; PvP/PvE, building, crafting).
 
-**Latest sources: Alpha 0.53.** Not a playable release. C++ compilation, UE Editor map generation, Windows launch, and two-player network correctness **are not yet verified**.
+**Latest sources: Alpha 0.53 + UE 5.8 compilation fixes (Nov 2026).** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
 
 ## First playable test map
 
@@ -15,6 +15,8 @@ On Windows with UE 5.8 and Visual Studio C++ tools:
 5. Run 2 players in PIE (Play As Listen Server) and record errors for the next development pass.
 
 See `FIRST_PLAY_ALPHA_053_RU.txt` for more details. Failure logs: `BUILD_ALPHA_051.log`, `BUILD_ALPHA_051_ERRORS.txt`, `BUILD_ALPHA_053_MAP.log`.
+
+**November 2026 first-play QA and handoff:** see [`QA_FIRST_PLAY_UE58_2026-11-07.md`](QA_FIRST_PLAY_UE58_2026-11-07.md). A local `TestWorld` was tested in PIE, but `Content/Maps/TestWorld.umap` is **not committed** yet; current repository startup settings still reference `/Engine/Maps/Entry`. The tester's local project was not a Git checkout, so local assets are not synchronized automatically.
 
 ## Source structure
 
