@@ -93,6 +93,25 @@ class TestGameplaySourceInvariants(unittest.TestCase):
         self.assertIn("if(!LocalPawn || !LocalPawn->bInventoryOpen)", cpp)
         self.assertLess(cpp.index("if(!LocalPawn || !LocalPawn->bInventoryOpen)"), cpp.index("DrawLine(X*.5f-9"))
 
+    def test_walls_snap_to_foundation_edges_without_corner_overlap(self):
+        cpp = read("Source/NYVERRA/Private/NyCharacter.cpp")
+        piece = read("Source/NYVERRA/Private/NyBuildPiece.cpp")
+        self.assertIn("Foundation->PieceType!=0", cpp)
+        self.assertIn("Type==1 && Foundation", cpp)
+        self.assertIn("FVector(135.f*Side,0.f,0.f)", cpp)
+        self.assertIn("FVector(0.f,135.f*Side,0.f)", cpp)
+        self.assertIn("FVector(120.f,15.f,125.f)", cpp)
+        self.assertIn("FVector(2.4f,.3f,2.5f)", piece)
+        self.assertIn("if(!Foundation && GroundHit.GetComponent()->Mobility!=EComponentMobility::Static)", cpp)
+
+    def test_map_sync_refuses_overwrite_and_requires_git_main(self):
+        ps = read("Tools/Sync-TestWorld-ToGitHub.ps1")
+        self.assertIn("TestWorld.umap", ps)
+        self.assertIn("Get-FileHash", ps)
+        self.assertIn("Refusing to overwrite", ps)
+        self.assertIn("pull --ff-only origin main", ps)
+        self.assertIn("push origin HEAD:main", ps)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
