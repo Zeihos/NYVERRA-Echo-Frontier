@@ -319,13 +319,29 @@ void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
   break;
  }
  if (!bFoundTerrain) return;
- // Do not stack new structures on top of existing pieces in this prototype.
- if (Cast<ANyBuildPiece>(GroundHit.GetActor())) return;
- if (GroundHit.ImpactNormal.Z < 0.85f || !GroundHit.GetComponent() || GroundHit.GetComponent()->Mobility != EComponentMobility::Static) return;
- // Match the actual cube mesh extents after ANyBuildPiece::OnRep_Type scales it.
- const FVector Extent = Type == 0 ? FVector(150.f, 150.f, 15.f) : FVector(150.f, 15.f, 125.f);
- P.Z = GroundHit.ImpactPoint.Z + Extent.Z;
- const FRotator Rot = Type == 0 ? FRotator::ZeroRotator : FRotator(0.f, FMath::GridSnap(GetActorRotation().Yaw, 90.f), 0.f);
+ // Walls may attach to the top edge of a foundation, but foundations
+ // cannot stack, and no structure may be built on top of an existing wall.
+ ANyBuildPiece* Foundation=Cast<ANyBuildPiece>(GroundHit.GetActor());
+ if(Foundation && (Type!=1 || Foundation->PieceType!=0))return;
+ if(GroundHit.ImpactNormal.Z<0.85f || !GroundHit.GetComponent() ||
+    GroundHit.GetComponent()->Mobility!=EComponentMobility::Static)return;
+ // 240 cm wall length + 30 cm thickness allows neighboring perpendicular
+ // walls to meet at corners without collider overlap. Foundation is 300x300.
+ const FVector Extent=Type==0?FVector(150.f,150.f,15.f):FVector(120.f,15.f,125.f);
+ FRotator Rot=Type==0?FRotator::ZeroRotator:FRotator(0.f,FMath::GridSnap(GetActorRotation().Yaw,90.f),0.f);
+ P.Z=GroundHit.ImpactPoint.Z+Extent.Z;
+ if(Type==1 && Foundation){
+  // The closest side to the player selects one of four foundation edges.
+  // Geometry and collision are calculated ONLY from server-owned actors.
+  const FVector Delta=GetActorLocation()-Foundation->GetActorLocation();
+  if(Delta.SizeSquared2D()>FMath::Square(470.f))return;
+  const bool bEastWest=FMath::Abs(Delta.X)>FMath::Abs(Delta.Y);
+  const float Side=(bEastWest?Delta.X:Delta.Y)>=0.f?1.f:-1.f;
+  Rot=bEastWest?FRotator(0.f,90.f,0.f):FRotator::ZeroRotator;
+  P=Foundation->GetActorLocation()+
+    (bEastWest?FVector(135.f*Side,0.f,0.f):FVector(0.f,135.f*Side,0.f));
+  P.Z=Foundation->GetActorLocation().Z+15.f+Extent.Z;
+ }
 
  // Check all collidable buildables, pawns, resources and loot crates.
  // Unlike the old zero-length sweep, this check respects the wall rotation.
