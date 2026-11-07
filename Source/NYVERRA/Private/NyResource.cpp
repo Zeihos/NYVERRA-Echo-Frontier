@@ -3,6 +3,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Net/UnrealNetwork.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "TimerManager.h"
 ANyResource::ANyResource() {
  bReplicates = true;
  SetReplicateMovement(false);
@@ -14,8 +15,8 @@ ANyResource::ANyResource() {
 }
 void ANyResource::Setup(ENyResourceKind NewKind,int32 Amount) {
  if(!HasAuthority()) return;
- Kind=NewKind;Remaining=Amount;
- UpdateLook();ForceNetUpdate();
+ Kind=NewKind;InitialRemaining=FMath::Max(1,Amount);Remaining=InitialRemaining;
+ UpdateLook();UpdateAvailability();ForceNetUpdate();
 }
 void ANyResource::UpdateLook() {
  if(Kind==ENyResourceKind::Wood) SetActorScale3D(FVector(0.5f,0.5f,1.6f));
@@ -27,13 +28,32 @@ void ANyResource::UpdateLook() {
   Material->SetVectorParameterValue(TEXT("Color"),Color);
  }
 }
-void ANyResource::OnRep_Remaining(){UpdateLook();}
-void ANyResource::OnRep_Kind(){UpdateLook();}
+// Empty resource nodes are hidden and non-blocking on BOTH server and clients.
+void ANyResource::UpdateAvailability(){
+ if(!Mesh)return;
+ const bool bAvailable=Remaining>0;
+ Mesh->SetVisibility(bAvailable,true);
+ Mesh->SetCollisionEnabled(bAvailable?ECollisionEnabled::QueryAndPhysics:ECollisionEnabled::NoCollision);
+}
+void ANyResource::OnRep_Remaining(){UpdateAvailability();}
+void ANyResource::OnRep_Kind(){UpdateLook();UpdateAvailability();}
 bool ANyResource::Harvest(int32& Award,int32 Requested){
- if(!HasAuthority()||Remaining<=0||Requested<1||Remaining<Requested){Award=0;return false;}
- Award=Requested;Remaining-=Requested;
- if(Remaining<=0) Destroy(); else ForceNetUpdate();
+ Award=0;
+ if(!HasAuthority()||Remaining<=0||Requested<1||Remaining<Requested)return false;
+ Award=Requested;
+ Remaining-=Requested;
+ UpdateAvailability();
+ if(Remaining==0){
+  GetWorldTimerManager().SetTimer(RespawnTimer,this,&ANyResource::RespawnResource,RespawnSeconds,false);
+ }
+ ForceNetUpdate();
  return true;
+}
+void ANyResource::RespawnResource(){
+ if(!HasAuthority())return;
+ Remaining=FMath::Max(1,InitialRemaining);
+ UpdateAvailability();
+ ForceNetUpdate();
 }
 void ANyResource::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const{
  Super::GetLifetimeReplicatedProps(OutLifetimeProps);
