@@ -123,6 +123,7 @@ float ANyEnemy::TakeDamage(float Amount,const FDamageEvent& Event,AController* E
  Health=FMath::Max(0.f,Health-Amount);
  if(Health<=0.f){
   bDead=true;Target.Reset();bAlerted=false;
+  OnRep_Dead();
   if(AAIController* AI=Cast<AAIController>(GetController())) AI->StopMovement();
   GetCharacterMovement()->DisableMovement();
   // Reward only the player who delivered the killing blow; never trust a client loot claim.
@@ -130,9 +131,30 @@ float ANyEnemy::TakeDamage(float Amount,const FDamageEvent& Event,AController* E
   if(IsValid(Killer) && !Killer->bIsDead && FMath::FRand()<=FMath::Clamp(LootDropChance,0.f,1.f)){
    Killer->GiveLoot(ENyItemId::Berries,2);
   }
-  GetWorldTimerManager().SetTimer(DespawnTimer,FTimerDelegate::CreateWeakLambda(this,[this](){Destroy();}),8.f,false);
+  // Reuse this replicated actor after a server-only cooldown. PvE must not
+  // permanently disappear once players defeat the four initial enemies.
+  GetWorldTimerManager().SetTimer(RespawnTimer,this,&ANyEnemy::RespawnEnemy,FMath::Max(10.f,RespawnSeconds),false);
  }
  ForceNetUpdate();return Applied;
+}
+void ANyEnemy::OnRep_Dead(){
+ if(DebugBody) DebugBody->SetVisibility(!bDead,true);
+ SetActorEnableCollision(!bDead);
+}
+void ANyEnemy::RespawnEnemy(){
+ if(!HasAuthority() || !bDead)return;
+ // Return to the original spawn instead of resurrecting in the middle of combat.
+ SetActorLocation(HomeLocation,false,nullptr,ETeleportType::TeleportPhysics);
+ Health=60.f;
+ bDead=false;
+ bAlerted=false;
+ Target.Reset();
+ NextSearchTime=GetWorld()->GetTimeSeconds()+1.f;
+ NextPathRequestTime=0.f;
+ LastPathDestination=FVector(1000000.f,1000000.f,1000000.f);
+ GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+ OnRep_Dead();
+ ForceNetUpdate();
 }
 void ANyEnemy::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const{
  Super::GetLifetimeReplicatedProps(OutLifetimeProps);
