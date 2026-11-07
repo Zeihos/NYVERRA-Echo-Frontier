@@ -27,6 +27,6 @@ bool ANyLootCrate::TryLoot(ANyCharacter* Player){
 void ANyLootCrate::RespawnLoot(){if(!HasAuthority())return;bAvailable=true;ApplyAppearance();ForceNetUpdate();}
 void ANyLootCrate::OnRep_LootState(){ApplyAppearance();}
 void ANyLootCrate::ApplyAppearance(){if(Mesh)Mesh->SetVisibility(bAvailable,true);}
-void ANyLootCrate::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out)const{
- Super::GetLifetimeReplicatedProps(Out);DOREPLIFETIME(ANyLootCrate,bAvailable);
+void ANyLootCrate::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const{
+ Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(ANyLootCrate,bAvailable);
 }
