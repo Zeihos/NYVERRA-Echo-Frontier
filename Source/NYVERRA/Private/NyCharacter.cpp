@@ -138,8 +138,23 @@ void ANyCharacter::RespawnAfterDeath(){
  // Never use a fixed Z: it can trap players below terrain after importing a heightmap.
  // Use a map-authored PlayerStart when possible; avoid respawning everyone at world origin.
  FVector RespawnLocation(0.f,0.f,180.f);
- for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It) {
-  if (IsValid(*It)) { RespawnLocation = It->GetActorLocation(); break; }
+ // Multiplayer spawn safety: choose the PlayerStart with the greatest minimum
+ // distance to living players instead of repeatedly using the first spawn.
+ float BestClearanceSquared=-1.f;
+ for(TActorIterator<APlayerStart> It(GetWorld());It;++It){
+  if(!IsValid(*It))continue;
+  const FVector Candidate=It->GetActorLocation();
+  float NearestPlayerSquared=FMath::Square(100000.f);
+  for(TActorIterator<ANyCharacter> PlayerIt(GetWorld());PlayerIt;++PlayerIt){
+   const ANyCharacter* Other=*PlayerIt;
+   if(!IsValid(Other)||Other==this||Other->bIsDead)continue;
+   NearestPlayerSquared=FMath::Min(NearestPlayerSquared,
+    FVector::DistSquared2D(Candidate,Other->GetActorLocation()));
+  }
+  if(NearestPlayerSquared>BestClearanceSquared){
+   BestClearanceSquared=NearestPlayerSquared;
+   RespawnLocation=Candidate;
+  }
  }
  // Trace through overhanging site geometry rather than placing the player on a roof.
  FHitResult GroundHit;
