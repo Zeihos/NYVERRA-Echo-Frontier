@@ -14,7 +14,9 @@ public:
  virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
  virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
  UPROPERTY(Replicated, BlueprintReadOnly, Category="Enemy") float Health = 60.f;
- UPROPERTY(Replicated, BlueprintReadOnly, Category="Enemy") bool bDead = false;
+ UPROPERTY(ReplicatedUsing=OnRep_Dead, BlueprintReadOnly, Category="Enemy") bool bDead = false;
+ UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy") float RespawnSeconds = 90.f;
+ UFUNCTION() void OnRep_Dead();
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy") float AggroRadius = 1100.f;
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy") float AttackRadius = 145.f;
  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy") float PatrolRadius = 550.f;
@@ -33,5 +35,6 @@ private:
  void MoveToward(const FVector& Destination);
  float NextPathRequestTime = 0.f;
  FVector LastPathDestination = FVector(1000000.f,1000000.f,1000000.f);
- FTimerHandle DespawnTimer;
+ FTimerHandle RespawnTimer;
+ void RespawnEnemy();
 };
