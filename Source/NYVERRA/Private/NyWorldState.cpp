@@ -214,7 +214,7 @@ void ANyWorldState::CreateAtmosphere(){
 }
 void ANyWorldState::UpdateAtmosphere(){
  bLastEcho=bEchoActive;
- if(Sun){if(UDirectionalLightComponent* L=Sun->GetDirectionalLightComponent()){
+ if(Sun){if(UDirectionalLightComponent* L=Sun->GetComponent()){
    const float Solar=FMath::Max(0.02f,FMath::Sin((TimeOfDayHours-6.f)*PI/12.f));
    L->SetWorldRotation(FRotator(90.f-180.f*(TimeOfDayHours/24.f),-32.f,0.f));
    L->SetIntensity((0.1f+6.f*Solar)*(bEchoActive?0.32f:1.f)*(bRainActive?0.65f:1.f));
@@ -225,8 +225,8 @@ void ANyWorldState::UpdateAtmosphere(){
    F->SetFogInscatteringColor(bEchoActive?FLinearColor(.02f,.38f,.48f):(bRainActive?FLinearColor(.2f,.3f,.35f):FLinearColor(.40f,.55f,.64f)));
  }}
 }
-void ANyWorldState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out)const{
- Super::GetLifetimeReplicatedProps(Out);
+void ANyWorldState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const{
+ Super::GetLifetimeReplicatedProps(OutLifetimeProps);
  DOREPLIFETIME(ANyWorldState,bEchoActive);
  DOREPLIFETIME(ANyWorldState,EchoSeconds);
  DOREPLIFETIME(ANyWorldState,TimeOfDayHours);
