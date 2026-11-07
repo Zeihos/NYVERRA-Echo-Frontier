@@ -1,0 +1,9 @@
+ALPHA 0.18 VALIDATION
+1. Install UE 5.8 and C++ toolchain, open NYVERRA.uproject and compile.
+2. Open /Game/Maps/TestWorld. If not yet generated, run Tools/create_test_world.py, then Build Paths and save.
+3. Run Tools/inspect_test_world.py and inspect Output Log for required actors.
+4. PIE two players as listen server, then as clients; check same position of collision POIs and interactable items.
+5. Compare scenery on both clients (deterministic 190731, 180018, 180019 seeds).
+6. Verify ridge silhouettes have NO collision and do not change server navigation.
+7. Verify attack, inventory, resource collection and AI chasing after NavMesh is baked.
+8. Log all C++ compiler errors and runtime errors; source syntax has not been compiled against UE5.8.

@@ -1,0 +1,14 @@
+NYVERRA Alpha 0.39 — Sprint replication / movement state patch
+
+- Replicate bWantsSprint and apply max walking speed through OnRep_Sprint.
+- Server validates sprint based on life state and stamina.
+- Prevent directional input while dead.
+- Reset sprint on death, respawn and exhaustion.
+- Preserve all existing source files and terrain assets from Alpha 0.38.
+
+OFFLINE VERIFIED: archive data, Python syntax, textual regression checks.
+NOT VERIFIED: Unreal Engine compilation, runtime, client prediction,
+server/client latency behavior, or finished Windows build.
+
+REQUIRED UE TESTS: two players, sprint start/stop on both clients,
+exhaustion during sprint, death while sprinting, respawn, reconnect.

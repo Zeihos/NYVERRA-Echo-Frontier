@@ -1,0 +1,14 @@
+NYVERRA Alpha 0.17 — persistent test map and navigation
+
+This is SOURCE, NOT an Unreal-compiled or Windows-playable build.
+1. Install the Unreal Engine version specified by NYVERRA.uproject and Windows C++ toolchain.
+2. Generate project files and compile NYVERRAEditor in Visual Studio / Unreal Editor.
+3. Open the editor and choose Tools -> Execute Python Script -> Tools/create_test_world.py.
+   Run this ONLY ONCE: it refuses to overwrite an existing TestWorld.
+4. Build -> Build Paths, press P, inspect GREEN navmesh on ground; save the level again.
+5. Play in Editor with 2 players and Listen Server. Inspect enemy patrol, chase, resource pickup, inventory, combat.
+6. Run a dedicated server test separately. Save compile and PIE logs for resolving real issues.
+
+NOTE: The script uses Unreal Python editor APIs that have not been executed in this environment. Depending on
+UE version, editor Python calls may need adjustments. Existing game systems are not compile-tested.
+The generated map has a flat mesh floor, not realistic Landscape; content art still pending.

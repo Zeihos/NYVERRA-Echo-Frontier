@@ -1,0 +1,11 @@
+NYVERRA Alpha 0.37 — source maintenance release
+
+Fixed:
+- Inventory crafting capacity preflight simulates removal of split ingredient stacks before adding tools.
+- Building snaps to server-traced collision ground, rejects unsupported surfaces and steep slopes.
+
+Offline checks: syntax-independent source invariants, project file presence, archive CRC.
+Not checked: Unreal Engine C++ compilation, actual map play, multiplayer, performance.
+
+Build on Windows: open NYVERRA.uproject with Unreal Engine 5.8 and compile.
+If errors occur, preserve complete UBT output.

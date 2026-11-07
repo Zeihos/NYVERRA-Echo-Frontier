@@ -1,0 +1,9 @@
+NYVERRA Alpha 0.36 — first-build hardening
+- Replaced controller viewpoint calls in server melee/interaction with pawn view location and control rotation.
+- Server sprint request now rejects dead players.
+- Added BUILD_ALPHA_036_WINDOWS.bat with saved log.
+- Added Tools/validate_alpha_036.py static regression checks.
+- Existing terrain, inventory, PvE and other source code retained.
+
+NOT VERIFIED: Unreal Engine 5.8 C++ compilation, .umap creation, Windows runtime, multiplayer.
+BUILD: run BUILD_ALPHA_036_WINDOWS.bat; inspect BUILD_ALPHA_036.log.

@@ -1,0 +1,20 @@
+NYVERRA Alpha 0.34 - BUILD READINESS UPDATE
+
+Changes:
+- Added read-only Unreal Editor world audit: Tools/validate_runtime_map_034.py
+  Reports PlayerStarts, NavMeshBoundsVolume, Landscape, fallback ground and duplicate spawns.
+- Added offline project structure / Python syntax check: Tools/check_source_034.py
+- Preserved gameplay C++ sources from Alpha 0.33 unchanged.
+
+IMPORTANT: This archive has NOT been compiled in UE5.8, nor play-tested.
+A Python syntax preflight does not establish compatibility with Unreal's Python API.
+This archive does not contain a compiled .exe or a saved TestWorld.umap.
+
+Windows sequence:
+1. Extract the ZIP, install UE 5.8 and Visual Studio C++ toolchain.
+2. Run CHECK_ALPHA_034.bat (requires Python 3).
+3. Run BUILD_ALPHA_033_WINDOWS.bat or build NYVERRAEditor from Visual Studio.
+4. If building succeeds: in Editor, Tools -> Execute Python Script -> Tools/create_test_world.py.
+5. Open TestWorld; Tools -> Execute Python Script -> Tools/validate_runtime_map_034.py.
+6. Build Paths, press P, then test 2 clients (Play Settings -> Number of Players = 2).
+7. If compilation fails, provide the FIRST compiler error and BUILD_ALPHA_033.log.

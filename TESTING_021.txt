@@ -1,0 +1,14 @@
+NYVERRA ALPHA 0.21 — EDITOR TEST PLAN
+
+1. Open NYVERRA.uproject in Unreal Engine with C++ toolchain installed.
+2. Compile the NYVERRA module; save the first compile errors if present.
+3. Open TestLandscape (or a fresh saved map) and import Content/TerrainSource/NyverraTestLandscape_505x505_R16.png using Landscape > Import from File.
+4. Save the level with a name containing TestLandscape; set it in Project Settings > Maps & Modes.
+5. Add PlayerStarts and NavMeshBoundsVolume manually, then Build Paths.
+6. Use Tools > Execute Python Script > Tools/inspect_landscape_021.py.
+7. Check that relay, warehouse and Echo circle sit on terrain, not at world Z=0.
+8. PIE with 2 players: verify items, loot crates, PvE, and any visual/physics desync.
+9. Repeat with a dedicated server. Record compile output, map name and screenshots.
+
+WARNING: This release is source-only. No UE compilation or PIE testing has occurred in this environment.
+Known limitations: built-in geometry, no real art assets or landscape material, and terrain collision/POI validation still needed.

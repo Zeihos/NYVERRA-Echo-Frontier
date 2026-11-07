@@ -1,0 +1,18 @@
+NYVERRA: Echo Frontier — Alpha 0.30 source preflight release
+
+This version focuses on reproducible validation of the existing code/assets instead of adding untested gameplay features.
+
+Run offline validation:
+  py -3 Tools\preflight_030.py
+
+Before you can play:
+1. Install Unreal Engine 5.8 and Visual Studio C++ game-development tools.
+2. Open NYVERRA.uproject and compile its C++ module. Fix and record any UE compiler errors.
+3. Create/save a level, import the 505x505 16-bit Landscape heightmap, and verify Z/scale.
+4. Prepare lighting, NavMeshBoundsVolume, PlayerStart; build navigation paths.
+5. Spawn foliage with Tools/place_foliage_hism_029.py after successful compilation.
+6. Run PIE 2 players and dedicated-server tests: input, movement, harvest, inventory, PvP, PvE and loot.
+7. Record UE log and screenshot before labeling any gameplay feature verified.
+
+Verified here: archive contents and offline preflight checks.
+NOT verified: successful Unreal compilation, editor script execution, gameplay, server replication, performance, realistic graphics.

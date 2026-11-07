@@ -1,0 +1,8 @@
+NYVERRA Alpha 0.38 - focused server building safeguards
+
+- Rate-limit server build requests to 0.35 seconds.
+- Reject out-of-bounds placement beyond the prototype play area.
+- Destroy a just-spawned build piece if resource spending fails.
+- Preserve all source assets and prior systems.
+
+Validation: offline static checks only. Unreal Editor/UE C++ compilation and gameplay remain UNTESTED.

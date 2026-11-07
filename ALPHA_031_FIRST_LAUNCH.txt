@@ -1,0 +1,15 @@
+NYVERRA Echo Frontier - Alpha 0.31 SOURCE PROJECT
+1. Run CHECK_ALPHA_031.bat (requires Python 3); this is NOT a UE compiler.
+2. Install UE 5.8 with C++ toolchain, open NYVERRA.uproject and compile.
+3. Create a new saved level in /Game/Maps, or run Tools/create_test_world.py
+   inside Unreal Editor to create /Game/Maps/TestWorld. Do not overwrite existing work.
+4. Open the saved map. Use Build Paths and P to verify NavMesh coverage.
+5. Import Content/TerrainSource heightmap into a DIFFERENT map if testing Landscape.
+   Do not keep the original flat collision floor underneath a Landscape.
+6. Add lighting, review PlayerStart heights and set Project Settings > Maps & Modes
+   to the saved map. Only then run PIE (2 players, listen server).
+7. Report UE compiler errors and runtime log lines for corrections.
+WARNING: No compiled .exe or checked .umap is included. C++ compilation and PIE
+have NOT been verified. Never deploy the current prototype as a public server.
+Alpha 0.31 fix: NyGameMode checks for existing map PlayerStarts before spawning
+fallback positions, avoiding duplicate start points on saved maps.

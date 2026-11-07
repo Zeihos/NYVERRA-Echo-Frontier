@@ -1,0 +1,16 @@
+NYVERRA Alpha 0.26 — surface authoring update
+
+New files:
+* normal and roughness maps (three each) generated from Alpha 0.25 albedo sources.
+* Tools/generate_surface_maps_026.py: reproducible texture generator (Python, NumPy, Pillow).
+* Tools/create_surface_material_026.py: Unreal Editor script for a NEW material.
+
+Unreal setup:
+1) Open a working UE 5.8 project; compile the C++ module (not verified in this environment).
+2) Import the 505x505 Landscape from Content/TerrainSource and its three existing weightmaps.
+3) Enable Editor Scripting Utilities / Python Editor Script Plugin.
+4) Execute Tools/create_surface_material_026.py inside Unreal Editor.
+5) Assign M_NyLandscape_Surface026 and set Grass/Rock LayerInfo weights.
+6) Check normal appearance, roughness and UV tiling under moving light. Check Editor Output Log for errors.
+
+Limitations: these are procedural textures, not photogrammetry assets. Material graph and Unreal runtime behavior have not been tested here. There is still no saved standalone playable level or Windows .exe.

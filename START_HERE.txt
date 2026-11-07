@@ -1,0 +1,7 @@
+NYVERRA ALPHA 0.22 (SOURCE ONLY, NOT UE-TESTED)
+
+Open NYVERRA.uproject in Unreal Engine 5.8 and build C++ first. Import the heightmap on a NEW saved level, then use Tools/prepare_landscape_world_022.py via Unreal Editor Tools > Execute Python Script. Review/adjust NavMesh and PlayerStart heights, Build Paths, and save.
+
+Read TESTING_022.txt for the full process. Offline check: python Tools/audit_source_022.py.
+
+IMPORTANT: No compiled Windows executable or compiled UE test is included.

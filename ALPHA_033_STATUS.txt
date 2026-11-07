@@ -1,0 +1,16 @@
+NYVERRA Alpha 0.33 — build verification milestone
+
+Changes:
+- Fixed death respawn on Landscape: collision ground raycast replaces fixed vertical coordinate.
+- Added BUILD_ALPHA_033_WINDOWS.bat to invoke Unreal Build Tool on Windows, saving a complete build log.
+- Added Tools/verify_alpha_033.py for offline structure checks.
+
+How to verify:
+1. Install Unreal Engine 5.8 and Visual Studio C++ game development tools.
+2. Run BUILD_ALPHA_033_WINDOWS.bat (optional argument: Unreal Engine installation path).
+3. Fix reported compile errors, if any.
+4. Open NYVERRA.uproject; run Tools/create_test_world.py in editor and save .umap.
+5. Test player movement, inventory, enemies, resources and two-player PIE.
+
+NOT VERIFIED: C++ compilation, editor Python execution, gameplay, network behavior.
+IMPORTANT: Offline tests and ZIP integrity do not prove a playable build.

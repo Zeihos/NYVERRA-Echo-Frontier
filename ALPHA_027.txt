@@ -1,0 +1,9 @@
+NYVERRA Alpha 0.27 — terrain-aware foliage data (offline source update)
+- NEW deterministic placements: 240 trees, 110 rocks, 190 shrubs.
+- Reads original heightmap with planned Landscape import X/Y scale 19.84127 cm, Z scale 100 cm.
+- Avoids player-spawn and three POI footprints and rejects excessively steep slopes.
+- New: Tools/generate_foliage_027.py, Tools/verify_foliage_027.py.
+- Placement CSV: Content/TerrainSource/Foliage027/FoliagePlacements.csv.
+- Preview: Content/TerrainSource/Foliage027/FoliagePreview.png.
+- This data is NOT spawned automatically in Unreal. Use foliage meshes with foliage mode or import the CSV via a custom editor utility.
+- Changes are offline verified only; C++ compilation and Unreal Editor rendering not verified.

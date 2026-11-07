@@ -1,0 +1,17 @@
+NYVERRA Alpha 0.51 - build diagnostics edition
+
+Changes:
+- Added BUILD_ALPHA_051_WINDOWS.bat: explicit Unreal Editor target build with preserved exit code.
+- Added Tools/summarize_build_051.py: extracts unique compiler errors from full log.
+- Added Tools/validate_alpha_051.py: small offline unit tests for project/build scripts.
+
+OFFLINE: py -3 Tools\validate_alpha_051.py
+WINDOWS: BUILD_ALPHA_051_WINDOWS.bat "C:\Program Files\Epic Games\UE_5.8"
+SEND BACK ON FAILURE: BUILD_ALPHA_051_ERRORS.txt AND BUILD_ALPHA_051.log.
+
+Known blockers:
+- No saved playable .umap is included; the editor script Tools/create_test_world.py
+  must be run after C++ compilation, and its success must be checked in Unreal Editor.
+- Unreal Engine is not available in the authoring environment, so engine compilation,
+  Python editor automation, and multiplayer remain UNVERIFIED.
+- Server target may require a source-built Unreal Engine installation.

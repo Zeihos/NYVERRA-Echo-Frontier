@@ -1,0 +1,21 @@
+NYVERRA Alpha 0.25 - textured landscape source upgrade
+
+NEW
+- Deterministic 512x512 tileable albedo source textures: soil, grass, rock.
+- Offline generator Tools/build_ground_textures_025.py (requires numpy and Pillow).
+- New, non-destructive Unreal Editor material creator Tools/create_textured_landscape_025.py.
+- Offline checks Tools/verify_alpha_025.py.
+
+IN UNREAL EDITOR (AFTER C++ COMPILATION)
+1. Import 505x505 heightmap as Landscape, if not yet done.
+2. Execute Tools/create_textured_landscape_025.py via Tools > Execute Python Script.
+3. Assign /Game/NYVERRA/Materials/M_NyLandscape_Textured to the Landscape.
+4. Make sure Grass/Rock LayerInfo assets exist, then import existing Grass/Rock 505x505 weightmaps.
+5. Inspect texture scale, terrain collision, resource placement and navigation; adjust via material editor.
+6. Save map explicitly. Existing M_NyLandscape is retained as a fallback.
+
+LIMITATIONS
+- Source textures are procedural, not photoreal scans or megascans.
+- No native .uasset or saved Landscape .umap is contained in the zip.
+- Unreal Editor Python APIs and Unreal C++ compilation have NOT been tested here.
+- Cannot claim a playable build until assembled and verified in Unreal Editor.

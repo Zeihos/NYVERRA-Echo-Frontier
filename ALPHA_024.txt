@@ -1,0 +1,25 @@
+NYVERRA Alpha 0.24 — Landscape layers (source project)
+
+WHAT CHANGED
+- Added deterministic 8-bit 505x505 Soil/Grass/Rock weightmaps in Content/TerrainSource.
+- Added offline weightmap generator Tools/generate_landscape_layers_024.py (numpy, Pillow).
+- Added UE Editor Python material generator Tools/create_landscape_material_024.py.
+- Kept the full Alpha 0.23 source project and heightmap.
+
+IMPORT WORKFLOW (in Unreal Editor 5.8)
+1. Open NYVERRA.uproject, compile C++ (not tested in this environment).
+2. Create and save a level; import the 505x505 16-bit heightmap as a Landscape.
+3. Enable the Editor Scripting Utilities and Python Editor Script Plugin if needed.
+4. Tools > Execute Python Script > Tools/create_landscape_material_024.py.
+5. Assign M_NyLandscape to your Landscape actor.
+6. Landscape > Paint: create Weight-Blended Layer Info assets for Grass and Rock.
+7. For Grass and Rock, import their respective 505x505 weightmap PNG files.
+8. If layers are not initialized, use Fill Layer on Grass first; then reimport both layers.
+9. The Soil map is supplied for reference/other workflows; Soil is the material fallback,
+   so this shader only exposes Grass and Rock paint layers.
+10. Save the level and verify collision, resources and NavMesh. Do not assign an unsaved map as startup map.
+
+LIMITS
+- Color-only prototype; no photoreal textures, normals, slope-correct physically based shading or runtime material switches.
+- Unreal Python script is untested in the actual editor and may need API adjustments.
+- This is SOURCE, not a packaged Windows EXE; Unreal compilation and gameplay not verified.

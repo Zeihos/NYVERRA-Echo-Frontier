@@ -1,0 +1,4 @@
+NYVERRA Alpha 0.49 - collision audit
+
+ServerPlacePiece now rejects blocking overlaps with arbitrary level actors, not only hard-coded gameplay classes. This protects untagged warehouse/radio site static meshes. It still allows the traced ground actor.
+Offline validation is not UE5 compilation. Run BUILD_ALPHA_047_WINDOWS.bat and create TestWorld in Unreal Editor before playtesting.

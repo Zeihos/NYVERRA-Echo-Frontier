@@ -1,0 +1,8 @@
+NYVERRA: Echo Frontier — Alpha 0.42 (source)
+
+Fix: resource/loot/enemy server spawn ground traces now ignore site architecture tagged NYVERRA_SiteGeometry instead of treating roofs and floors as Landscape.
+Tags are assigned when the three points of interest are built. Tracing is bounded to 128 attempts with diagnostic fallback.
+
+Offline verification: run `py -3 Tools\\validate_alpha_042.py` or `python Tools/validate_alpha_042.py`.
+
+UNVERIFIED: Unreal Engine 5.8 compilation, editor Python, .umap generation, gameplay, networked PvP/PvE. These require Unreal Editor on Windows.

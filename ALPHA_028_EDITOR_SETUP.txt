@@ -1,0 +1,16 @@
+NYVERRA Alpha 0.28 — editor foliage integration (EXPERIMENTAL)
+
+1. Open project in Unreal Engine 5.8; compile the C++ module.
+2. Open or create a saved level that contains the imported 505x505 Landscape from Alpha 0.19.
+3. In Tools > Execute Python Script select Tools/place_foliage_proxies_028.py.
+4. By default 120 of the 540 existing positions are placed. Set MAX_ACTORS=540 in the script to place all.
+5. Confirm the proxy meshes appear at sensible heights; tweak HEIGHT_OFFSET_CM if needed.
+6. Save level manually; build nav paths and test player movement.
+7. Script refuses repeated runs if existing NY28_PROXY_ objects are found; delete proxies before rerun.
+
+KNOWN LIMITATIONS
+- Procedural mesh placeholders, not realistic trees/foliage; independent StaticMeshActors are expensive and intended ONLY for editor inspection.
+- Does not build an HISM/foliage system or saved .umap asset.
+- Height coordinates are derived from the CSV heightmap; imported Landscape scale/height offsets must match or manual adjustments are needed.
+- No Unreal Editor is available in this environment; C++ compilation and Python Unreal API execution remain UNTESTED.
+- Previous gameplay and networking source files are included unchanged.

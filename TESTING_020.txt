@@ -1,0 +1,10 @@
+NYVERRA Alpha 0.20 - Landscape integration checklist
+1. Open the project in Unreal Engine 5.8; compile C++ before using any new map.
+2. Import Content/TerrainSource/NyverraTestLandscape_505x505_R16.png into a NEW map named TestLandscape020. Follow LANDSCAPE_IMPORT_019.txt for Landscape sizing.
+3. Remove legacy static ground planes: their collision will override Landscape traces. Place NavMeshBoundsVolume so it covers the playable area; Build Paths.
+4. Confirm a WorldState is created through GameMode/GameState; do not place a duplicate WorldState actor in the level.
+5. Play standalone: confirm resource nodes, crates and PvE enemies are near terrain height, not floating or buried. Test two players.
+6. Press P: verify green NavMesh; no green area means enemies cannot route correctly.
+7. This is source only: neither C++ compilation nor in-editor Landscape import has been tested in this environment.
+8. CAUTION: the existing POI buildings are still located at flat Z=0. Only resource nodes, crates, enemy spawn, PlayerStarts and local vegetation have ground tracing in v0.20.
+9. Some traces may intersect existing structures; investigate in editor and replace this prototype trace logic with dedicated Landscape collision filtering before production.

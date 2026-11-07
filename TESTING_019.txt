@@ -1,0 +1,1 @@
+Alpha 0.19 static checks: PNG format, dimensions, 16-bit data; ZIP CRC; Python syntax. Unreal Editor compile/gameplay NOT tested.

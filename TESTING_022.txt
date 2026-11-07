@@ -1,0 +1,14 @@
+NYVERRA Alpha 0.22 — Landscape integration checklist
+
+1. Build the C++ project with Unreal Engine 5.8 / Visual Studio first. Capture compilation log.
+2. Create or open a NEW LEVEL, import Content/TerrainSource/NyverraTestLandscape_505x505_R16.png as Landscape (505x505, 16-bit). SAVE.
+3. In Unreal Editor use Tools > Execute Python Script > Tools/prepare_landscape_world_022.py.
+4. Review all added actors. Adjust PlayerStart vertical coordinates to sit ABOVE the actual Landscape.
+5. Ensure a single collision-enabled Landscape is present. Remove OLD test floor in this map if applicable.
+6. Adjust NavMeshBoundsVolume to cover relevant walkable areas. Build Paths. Press P to inspect the green mesh. SAVE.
+7. Set your saved map as EditorStartupMap and GameDefaultMap in Project Settings > Maps & Modes (project default still references TestWorld).
+8. Execute Tools/inspect_landscape_021.py for static actor counts.
+9. PIE test first with one player, then two players + a dedicated server. Verify resource harvesting, loot synchronization, enemy navigation and build placement.
+10. Log exact build errors, screenshots and server logs. Do not mark tests passed until actually run in UE.
+
+NOTE: Source-only! Editor execution, C++ compilation, Landscape material and gameplay runtime are unverified.

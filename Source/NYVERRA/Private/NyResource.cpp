@@ -1,0 +1,41 @@
+#include "NyResource.h"
+#include "Components/StaticMeshComponent.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Net/UnrealNetwork.h"
+#include "Materials/MaterialInstanceDynamic.h"
+ANyResource::ANyResource() {
+ bReplicates = true;
+ SetReplicateMovement(false);
+ Mesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ResourceMesh"));
+ RootComponent=Mesh;
+ Mesh->SetCollisionProfileName(TEXT("BlockAll"));
+ static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+ if(Sphere.Succeeded()) Mesh->SetStaticMesh(Sphere.Object);
+}
+void ANyResource::Setup(ENyResourceKind NewKind,int32 Amount) {
+ if(!HasAuthority()) return;
+ Kind=NewKind;Remaining=Amount;
+ UpdateLook();ForceNetUpdate();
+}
+void ANyResource::UpdateLook() {
+ if(Kind==ENyResourceKind::Wood) SetActorScale3D(FVector(0.5f,0.5f,1.6f));
+ else if(Kind==ENyResourceKind::Stone) SetActorScale3D(FVector(1.0f,0.85f,0.55f));
+ else if(Kind==ENyResourceKind::Berries) SetActorScale3D(FVector(0.32f));
+ else SetActorScale3D(FVector(0.45f));
+ if(UMaterialInstanceDynamic* Material=Mesh->CreateAndSetMaterialInstanceDynamic(0)) {
+  const FLinearColor Color=Kind==ENyResourceKind::Wood?FLinearColor(0.20f,0.34f,0.13f):Kind==ENyResourceKind::Stone?FLinearColor(0.22f,0.29f,0.31f):Kind==ENyResourceKind::Berries?FLinearColor(0.7f,0.04f,0.12f):FLinearColor(0.0f,0.75f,0.9f);
+  Material->SetVectorParameterValue(TEXT("Color"),Color);
+ }
+}
+void ANyResource::OnRep_Remaining(){UpdateLook();}
+void ANyResource::OnRep_Kind(){UpdateLook();}
+bool ANyResource::Harvest(int32& Award,int32 Requested){
+ if(!HasAuthority()||Remaining<=0||Requested<1||Remaining<Requested){Award=0;return false;}
+ Award=Requested;Remaining-=Requested;
+ if(Remaining<=0) Destroy(); else ForceNetUpdate();
+ return true;
+}
+void ANyResource::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out)const{
+ Super::GetLifetimeReplicatedProps(Out);
+ DOREPLIFETIME(ANyResource,Remaining);DOREPLIFETIME(ANyResource,Kind);
+}

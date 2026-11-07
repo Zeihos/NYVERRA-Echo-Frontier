@@ -1,0 +1,16 @@
+NYVERRA Alpha 0.19 — terrain import procedure (Unreal Editor)
+1. BACK UP TestWorld. Use a new level e.g. /Game/Maps/TestLandscape019 to avoid destroying it.
+2. In Unreal Editor: Landscape mode -> Manage -> Import from File.
+3. Select Content/TerrainSource/NyverraTestLandscape_505x505_R16.png.
+4. Dimensions: 505x505, 8x8 components when using 63x63 quads per section, 1 section/component.
+5. Import X/Y scale = 19.84127 cm (100m total width across 504 quads). Z scale = 100 cm.
+6. Level placement: center the landscape at world X=0, Y=0; Z=0.
+7. ADD PlayerStarts, NavMeshBoundsVolume and WorldState; do not reuse existing
+   TestWorld ground mesh — it would overlap the landscape collision.
+8. After import: Build Paths, save the map, press P to inspect green NavMesh.
+9. POI placements are currently procedural at fixed world coords, with flat pads
+   at (1750,1550),(-2050,900),(450,-2350). Heightmap is near Z=0 there.
+10. Existing decoration generated in WorldState is cosmetic and sits near Z=0;
+    until placement is adapted to line-trace on Landscape, some trees may float.
+11. This is an importable heightmap ASSET, NOT a ready-made .umap file.
+12. Compile C++ and test in UE 5.8 before claiming playability.

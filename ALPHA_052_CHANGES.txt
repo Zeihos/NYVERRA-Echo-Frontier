@@ -1,0 +1,9 @@
+NYVERRA Alpha 0.52 - first-play initialization fix
+
+- Moved fallback PlayerStart creation from InitGame to BeginPlay.
+- Respect level-authored PlayerStart actors after map load.
+- Keeps temporary fallback spawn points for test maps.
+
+OFFLINE CHECKS ONLY: does not verify Unreal C++ compilation, map script compatibility or Windows gameplay.
+
+To test on Windows: run BUILD_ALPHA_051_WINDOWS.bat, inspect BUILD_ALPHA_051_ERRORS.txt and BUILD_ALPHA_051.log; then create a persistent .umap and test in Editor.

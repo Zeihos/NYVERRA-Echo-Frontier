@@ -1,0 +1,27 @@
+NYVERRA: Echo Frontier — готовый комплект для закрытого репозитория
+
+Репозиторий уже создан: https://github.com/Zeihos/NYVERRA-Echo-Frontier
+Приватность проверена 07.11.2026: PRIVATE. Не меняйте на PUBLIC.
+
+1. Установить Git for Windows, если ещё не установлен.
+2. Распаковать весь архив NYVERRA-GitHub-Private-Ready.zip на Windows.
+3. В открывшейся папке запустить двойным нажатием PUSH_TO_GITHUB_PRIVATE.bat.
+4. Подтвердить видимость PRIVATE (скрипт попросит подтверждение).
+5. Если появится окно GitHub, пройти авторизацию.
+6. Дождаться сообщения [SUCCESS].
+7. Проверить появление папок Source, Content, History, Documentation в GitHub.
+
+По умолчанию скрипт отправляет в:
+https://github.com/Zeihos/NYVERRA-Echo-Frontier.git
+Если нужно, можно передать свой URL первым аргументом, но это необязательно.
+
+Если Git сообщает 'Please tell me who you are':
+  git config --global user.name "Zeihos"
+  git config --global user.email "<ваша почта в GitHub>"
+После установки имени и почты повторно запустить BAT.
+
+Если репозиторий уже имеет новые коммиты, push может вернуть non-fast-forward.
+В таком случае не используйте force push: сначала нужно согласовать изменения.
+
+В архиве есть ВСЕ 52 исходных ZIP-версии, актуальная Alpha 0.52,
+утверждённые документы GDD и ТЗ. Компиляция Unreal C++ пока не подтверждена.

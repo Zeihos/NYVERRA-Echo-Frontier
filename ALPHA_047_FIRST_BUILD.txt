@@ -1,0 +1,16 @@
+NYVERRA: Echo Frontier — Alpha 0.47
+
+1. Run: py -3 Tools\audit_alpha_047.py
+2. Install Unreal Engine 5.8 and Visual Studio 2022 with C++ game development and Windows SDK.
+3. Run: BUILD_ALPHA_047_WINDOWS.bat
+   Or pass a custom UE installation directory as the first argument.
+4. Inspect BUILD_ALPHA_047.log. A Python audit PASS is not a successful Unreal build.
+5. If the build succeeds, open NYVERRA.uproject in Unreal Editor.
+6. Create/import the Landscape and save a real .umap TestWorld in the editor.
+7. Add PlayerStarts and NavMeshBoundsVolume, build navigation, set TestWorld as startup level.
+8. Test standalone with one player, then PIE with two players and dedicated server enabled.
+
+KNOWN LIMITATIONS
+- No compiled Windows executable or validated Unreal Editor world is included.
+- Existing terrain textures/assets may require manual import and assignment.
+- A successful C++ build still does not establish multiplayer correctness.

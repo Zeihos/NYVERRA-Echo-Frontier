@@ -1,0 +1,16 @@
+NYVERRA Alpha 0.32 - SOURCE VALIDATION GATE
+
+This update adds an executable offline validation tool. It does not pretend that Unreal C++ has compiled.
+
+Windows:
+1. Run CHECK_ALPHA_032.bat (requires Python 3).
+2. Open NYVERRA.uproject in Unreal Engine 5.8 with appropriate C++ toolchain.
+3. Build the Editor target and resolve ALL compiler errors.
+4. Create and SAVE a playable .umap in /Game/Maps/ (this archive does not contain a saved game map).
+5. Place Landscape, PlayerStarts and NavMeshBoundsVolume; build navigation.
+6. Configure project default maps to the saved level.
+7. Test local PIE with 2 players; then dedicated server/client and review logs.
+
+Release gate: no stable-alpha or executable Windows build claims until compilation and networking tests pass.
+
+Offline test command: python Tools/validate_alpha_032.py

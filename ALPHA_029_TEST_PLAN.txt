@@ -1,0 +1,13 @@
+NYVERRA Alpha 0.29 — validation plan
+
+1. Open project in UE 5.8 and compile the C++ module; record full compiler errors.
+2. Create/open the Landscape level (the ZIP still contains source heightmaps, not a finished .umap).
+3. Enable Editor Python Scripting; Tools > Execute Python Script > Tools/place_foliage_hism_029.py.
+4. Verify one NY29_FOLIAGE_HISM actor with 240 trees, 110 rocks, 190 shrubs; visually inspect placement in all biomes.
+5. Check rerunning the script exits without adding duplicates.
+6. Test local play plus 2-player PIE (dedicated server mode), NavMesh and loot interaction.
+7. Compare frame time versus old per-actor proxies in the same viewport, graphics settings and camera location. No FPS gain is claimed without measurement.
+8. After testing, save level and assign it in Project Settings > Maps & Modes.
+
+Limitations: placeholder cone/sphere meshes, no photorealistic vegetation;
+C++ is not compiled or runtime-tested in the delivery environment.

@@ -1,0 +1,6 @@
+NYVERRA Alpha 0.45 - respawn ground validation
+
+- Spawn ground trace ignores tagged scene structures and player-built foundations/walls.
+- Rejects steep surfaces; preserves PlayerStart elevation when no valid floor is found.
+- Limits trace passes to 64 and reports missing floor to the Unreal log.
+- Offline checks do not imply successful UE 5.8 compilation or runtime testing.

@@ -1,0 +1,5 @@
+NYVERRA Alpha 0.40 - C++ source patch, not a compiled game.
+- Corrects building overlap extents to match spawned mesh (foundation 300x300x30, wall 300x30x250).
+- Checks overlaps with wall rotation, other structures, pawns, resources and crates.
+- Rejects building on top of existing structures; retains server-side checks and resource transaction.
+- Still requires Unreal Engine 5.8 compile, map creation and multiplayer runtime testing.

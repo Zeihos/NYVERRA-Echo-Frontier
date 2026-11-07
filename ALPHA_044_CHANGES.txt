@@ -1,0 +1,9 @@
+NYVERRA Echo Frontier - Alpha 0.44 (source only)
+- Construction now rejects overlap with tagged landmark/site geometry, as well as other occupied actors.
+- Loot crate interaction checks authoritative distance to crate.
+- Interaction request checks eye origin against server-side pawn location.
+- Added Tools/validate_alpha_044.py offline invariants.
+
+Verified: Python syntax, static source invariants, ZIP integrity.
+NOT verified: C++ compilation in Unreal Engine 5.8, any editor script execution, multiplayer operation, or playable Windows build.
+To get engine feedback, run BUILD_ALPHA_036_WINDOWS.bat on a Windows machine with UE 5.8 and attach the build log.

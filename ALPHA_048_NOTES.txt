@@ -1,0 +1,8 @@
+NYVERRA ALPHA 0.48 — source patch / first-build gate
+- Prevent Jump input for dead characters (also when inventory UI is open).
+- Remove duplicated melee eye-position validation.
+- Add Tools/validate_alpha_048.py offline assertions.
+- Retains 0.47 gameplay sources, heightmap, material tools and build script.
+- No Unreal C++ compilation, runtime validation or saved .umap was performed here.
+Windows: run py -3 Tools\validate_alpha_048.py, then BUILD_ALPHA_047_WINDOWS.bat.
+For errors, share BUILD_ALPHA_047.log so Unreal-specific compile failures can be fixed.

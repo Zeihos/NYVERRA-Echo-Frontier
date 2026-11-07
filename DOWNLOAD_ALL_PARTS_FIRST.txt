@@ -1,0 +1,4 @@
+1) Extract this archive into one empty folder.
+2) Extract EVERY archive named 02_HISTORY... through 08_HISTORY... into the SAME folder, merging directories.
+3) Confirm that History/UE5_Alpha_Archives contains 52 ZIP files.
+4) Run PUSH_TO_GITHUB_PRIVATE.bat after verifying repository visibility on GitHub.

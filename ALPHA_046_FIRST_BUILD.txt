@@ -1,0 +1,13 @@
+NYVERRA Alpha 0.46 - First build checkpoint
+
+1. This archive is SOURCE CODE, not a compiled Windows game.
+2. Install Unreal Engine 5.8, Visual Studio 2022 with Desktop development with C++ / Game development with C++ and Windows SDK.
+3. Extract the archive to a short path such as C:\NYVERRA.
+4. Run: py -3 Tools\preflight_046.py
+5. Run: BUILD_ALPHA_046_WINDOWS.bat
+   If engine is installed elsewhere, pass the engine root directory in quotes.
+6. Check BUILD_ALPHA_046.log. If compilation fails, send the COMPLETE log.
+7. After success, open NYVERRA.uproject, create/save a game map using the included map tools, then run PIE with one player before multiplayer.
+
+Known blockers: no pre-built .umap in this archive; Unreal compilation and runtime testing have NOT been performed in the source-generation environment.
+Validation script checks file presence and JSON structure; it CANNOT validate Unreal Engine APIs or actual gameplay.

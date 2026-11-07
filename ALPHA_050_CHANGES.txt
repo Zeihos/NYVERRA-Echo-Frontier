@@ -1,0 +1,8 @@
+NYVERRA Alpha 0.50 — source corrections
+1. Harvest inventory capacity checked before resource is consumed.
+2. Character receives quantity returned by node, rather than assuming reward.
+3. Respawn ground trace skips players, resource nodes and loot crates.
+4. World spawn trace skips existing resource nodes, crates, enemies and players.
+5. Run: py -3 Tools\validate_alpha_050.py
+
+UNVERIFIED: UE 5.8 C++ compilation, editor map creation, online gameplay. No packaged Windows build included.

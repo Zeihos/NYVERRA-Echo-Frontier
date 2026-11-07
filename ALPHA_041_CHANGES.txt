@@ -1,0 +1,10 @@
+NYVERRA Alpha 0.41 — server construction fixes
+
+- Failed build attempts no longer consume the build cooldown. The cooldown starts after a successful spawn and item transaction.
+- Structure placement has a 150 cm map-edge safety margin to keep the entire 300 cm footprint inside the playable area.
+- The overlap filter explicitly ignores the terrain actor used for the supporting ground hit and still rejects overlapping other build pieces, players, enemies, resource nodes and loot crates.
+
+Validation performed: ZIP CRC, source assertions, file inheritance from Alpha 0.40.
+NOT validated: Unreal Engine 5.8 C++ compilation, editor world/map creation, runtime networking, server behavior.
+
+Prerequisite for calling this a working build: compile in Unreal Engine 5.8, build a saved .umap level, and run a two-client test.

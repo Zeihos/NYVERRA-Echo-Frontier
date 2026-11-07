@@ -1,0 +1,14 @@
+NYVERRA Alpha 0.35 - FIRST PLAY CHECKLIST
+==========================================
+1. Run CHECK_ALPHA_035.bat. This only checks files/Python syntax.
+2. Run BUILD_ALPHA_033_WINDOWS.bat to COMPILE the C++ module using installed UE 5.8.
+3. Fix any compiler errors reported in BUILD_ALPHA_033.log before continuing.
+4. Open NYVERRA.uproject in the Unreal Editor.
+5. Tools > Execute Python Script > Tools/create_test_world.py (only if TestWorld does not exist).
+6. Verify green navigation visualization (P), Build Paths, and save TestWorld.
+7. Close Unreal Editor. Run: py -3 Tools/set_test_world_default.py
+8. Reopen Unreal Editor. Try single-player first, then Play settings > Number of Players = 2.
+9. Test movement, item pickup, combat, respawn, replication. Save compiler and runtime logs.
+
+STATUS: The scripts have not been tested in Unreal Editor, and this archive is NOT a Windows executable.
+No saved .umap is included; Unreal must generate the map binary itself.

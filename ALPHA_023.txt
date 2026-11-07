@@ -1,0 +1,19 @@
+NYVERRA Alpha 0.23 — source update
+
+CHANGES
+- Fixed invalid default map references. Initial startup uses /Engine/Maps/Entry, which ships with Unreal.
+- Tools/create_terrain_materials_023.py creates three basic editable UE materials: soil, rock, grass.
+- Tools/audit_project_023.py checks the project layout offline.
+- Preserved all previous source files and the 16-bit terrain heightmap.
+
+HOW TO USE
+1. Open NYVERRA.uproject in Unreal Engine with C++ development tools installed.
+2. Build the project. If any compiler errors occur, retain the full log for fixing.
+3. Import the heightmap as a Landscape into a saved level (see LANDSCAPE_IMPORT_019.txt).
+4. Tools > Execute Python Script > Tools/create_terrain_materials_023.py.
+5. In Content Browser /Game/NYVERRA/Materials, assign materials to suitable meshes. The generated basic materials are NOT a multi-layer landscape shader and are NOT photorealistic assets.
+6. Configure NavMeshBoundsVolume / spawn points, save your level, then set Project Settings > Maps & Modes to your saved level.
+
+VERIFICATION
+- Python syntax/ZIP consistency can be checked offline.
+- UE compile, plugin compatibility, material graph execution, visual quality and gameplay need an actual Unreal Editor test.
