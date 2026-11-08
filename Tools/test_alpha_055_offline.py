@@ -25,7 +25,10 @@ class VisualPolishTests(unittest.TestCase):
             self.assertIn(part, IM)
         for prop in ("MP_BASE_COLOR", "MP_NORMAL", "MP_ROUGHNESS"):
             self.assertIn(prop, IM)
-        self.assertIn("MaterialExpressionLandscapeLayerWeight", IM)
+        # Additive LandscapeLayerWeight would brighten diffuse and corrupt normals.
+        self.assertIn("MaterialExpressionLandscapeLayerSample", IM)
+        self.assertIn("MaterialExpressionLinearInterpolate", IM)
+        self.assertNotIn("unreal.MaterialExpressionLandscapeLayerWeight", IM)
 
     def test_texture_color_space_is_explicit(self):
         self.assertIn("TC_NORMALMAP", IM)
