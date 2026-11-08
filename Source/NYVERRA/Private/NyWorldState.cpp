@@ -11,6 +11,7 @@
 #include "Engine/ExponentialHeightFog.h"
 #include "EngineUtils.h"
 #include "UObject/UObjectGlobals.h"
+#include "Materials/MaterialInterface.h"
 
 ANyWorldState::ANyWorldState(){ bReplicates=true; PrimaryActorTick.bCanEverTick=true; }
 void ANyWorldState::BeginPlay(){
@@ -136,6 +137,14 @@ void ANyWorldState::GenerateLocalTerrain(){
  UStaticMesh* Cylinder=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
  UStaticMesh* Sphere=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Sphere.Sphere"));
  if(!Cube||!Cylinder||!Sphere)return;
+ // VisualPolish PBR surfaces are optional until installed by Unreal Editor.
+ // Never require content to exist for a dedicated server or older test map.
+ UMaterialInterface* GrassSurface=LoadObject<UMaterialInterface>(
+   nullptr,TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyGrass_PBR055.M_NyGrass_PBR055"));
+ UMaterialInterface* RockSurface=LoadObject<UMaterialInterface>(
+   nullptr,TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyRock_PBR055.M_NyRock_PBR055"));
+ UMaterialInterface* SoilSurface=LoadObject<UMaterialInterface>(
+   nullptr,TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NySoil_PBR055.M_NySoil_PBR055"));
  auto MakeInstances=[&](const TCHAR* Name,UStaticMesh* Shape)->UHierarchicalInstancedStaticMeshComponent*{
   UHierarchicalInstancedStaticMeshComponent* H=NewObject<UHierarchicalInstancedStaticMeshComponent>(this,Name);
   if(!H)return nullptr;
@@ -150,6 +159,10 @@ void ANyWorldState::GenerateLocalTerrain(){
  Rocks=MakeInstances(TEXT("ScatterRocks"),Sphere);
  // Alpha 0.18: separate instanced silhouettes make the three biomes readable.
  UHierarchicalInstancedStaticMeshComponent* Ridge=MakeInstances(TEXT("DistantRidges"),Cube);
+ if(Trunks && SoilSurface) Trunks->SetMaterial(0,SoilSurface);
+ if(Canopies && GrassSurface) Canopies->SetMaterial(0,GrassSurface);
+ if(Rocks && RockSurface) Rocks->SetMaterial(0,RockSurface);
+ if(Ridge && RockSurface) Ridge->SetMaterial(0,RockSurface);
  FRandomStream RNG(190731);
  for(int32 i=0;i<360;i++){
   const FVector XY(RNG.FRandRange(-3950,3950),RNG.FRandRange(-3950,3950),0.f);
@@ -201,7 +214,7 @@ void ANyWorldState::GenerateLocalTerrain(){
  }
  // Location marker; gameplay actors are the only replicated interactive objects.
  AStaticMeshActor* Beacon=W->SpawnActor<AStaticMeshActor>(FVector(0,0,210),FRotator::ZeroRotator);
- if(Beacon){Beacon->SetReplicates(false);auto* M=Beacon->GetStaticMeshComponent();M->SetMobility(EComponentMobility::Movable);M->SetStaticMesh(Cylinder);Beacon->SetActorScale3D(FVector(1.3f,1.3f,4.2f));}
+ if(Beacon){Beacon->SetReplicates(false);auto* M=Beacon->GetStaticMeshComponent();M->SetMobility(EComponentMobility::Movable);M->SetStaticMesh(Cylinder);if(RockSurface)M->SetMaterial(0,RockSurface);Beacon->SetActorScale3D(FVector(1.3f,1.3f,4.2f));}
  UE_LOG(LogTemp,Display,TEXT("[NYVERRA Alpha 0.6] instanced forest generated locally"));
 }
 void ANyWorldState::CreateAtmosphere(){
