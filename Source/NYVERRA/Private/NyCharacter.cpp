@@ -319,7 +319,7 @@ void ANyCharacter::Tick(float DT){
 }
 void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  if(Health<=0.f||bIsDead)return;
- if(!HasAuthority()||Type>1||CountItem(ENyItemId::Wood)<4||CountItem(ENyItemId::Stone)<2)return;
+ if(!HasAuthority()||!IsValid(GetPlayerState())||Type>1||CountItem(ENyItemId::Wood)<4||CountItem(ENyItemId::Stone)<2)return;
  // Reject rapid build RPC spam on the dedicated server.
  const float Now = GetWorld()->GetTimeSeconds();
  if (Now - LastBuildTime < 0.35f) return;
