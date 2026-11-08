@@ -82,10 +82,14 @@ void ANyGameMode::SpawnServerResources(){
   if(FVector2D::Distance(XY,FVector2D(1750.f,1550.f))<1150.f ||
      FVector2D::Distance(XY,FVector2D(-2050.f,900.f))<1300.f ||
      FVector2D::Distance(XY,FVector2D(450.f,-2350.f))<1050.f) continue;
-  const ENyResourceKind Type=i%17==0?ENyResourceKind::Berries:i%11==0?ENyResourceKind::EchoShard:i%3==0?ENyResourceKind::Stone:ENyResourceKind::Wood;
-  const float Z=Type==ENyResourceKind::Wood?80.f:35.f;
+  const ENyResourceKind Type=i%17==0?ENyResourceKind::Berries:
+   i%13==0?ENyResourceKind::Water:
+   i%11==0?ENyResourceKind::EchoShard:
+   i%3==0?ENyResourceKind::Stone:ENyResourceKind::Wood;
+  const float Z=Type==ENyResourceKind::Wood?80.f:Type==ENyResourceKind::Water?65.f:35.f;
   if(ANyResource* N=W->SpawnActor<ANyResource>(NyServerGround(W,P,Z),FRotator::ZeroRotator)){
-   N->Setup(Type,Type==ENyResourceKind::EchoShard?3:Type==ENyResourceKind::Berries?4:6);
+   N->Setup(Type,Type==ENyResourceKind::EchoShard?3:
+    Type==ENyResourceKind::Berries?4:Type==ENyResourceKind::Water?8:6);
   }
  }
  UE_LOG(LogTemp,Display,TEXT("[NYVERRA Alpha 0.9] wilderness resource pool ready"));
@@ -102,7 +106,14 @@ void ANyGameMode::SpawnSiteResources(){
   {FVector(-2050.f,900.f,95.f), ENyResourceKind::Stone, 7},
   {FVector(-1810.f,1120.f,95.f), ENyResourceKind::Wood, 7},
   {FVector(450.f,-2350.f,90.f), ENyResourceKind::EchoShard, 6},
-  {FVector(720.f,-2350.f,90.f), ENyResourceKind::EchoShard, 3}
+  {FVector(720.f,-2350.f,90.f), ENyResourceKind::EchoShard, 3},
+  // Four guaranteed renewable water caches near the starting territory.
+  {FVector(480.f,380.f,65.f), ENyResourceKind::Water, 8},
+  {FVector(-480.f,380.f,65.f), ENyResourceKind::Water, 8},
+  {FVector(-480.f,-380.f,65.f), ENyResourceKind::Water, 8},
+  {FVector(480.f,-380.f,65.f), ENyResourceKind::Water, 8},
+  {FVector(1950.f,1350.f,65.f), ENyResourceKind::Water, 8},
+  {FVector(-2300.f,1150.f,65.f), ENyResourceKind::Water, 8}
  };
  for(const FSiteDrop& Drop : Drops){
   if(ANyResource* Node=W->SpawnActor<ANyResource>(NyServerGround(W,Drop.Position,Drop.Position.Z),FRotator::ZeroRotator)){
