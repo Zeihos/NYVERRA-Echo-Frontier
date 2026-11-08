@@ -65,13 +65,14 @@ bool ANyBuildPiece::TryOpenDoor(const APlayerState* Requester){
 void ANyBuildPiece::TryCloseDoor(){
  if(!HasAuthority()||PieceType!=2||!bDoorOpen||!GetWorld())return;
  // Don't trap a player inside the reappearing closed doorway.
+ // Vertical safety volume deliberately stops above its supporting foundation.
  FCollisionObjectQueryParams Objects;
  Objects.AddObjectTypesToQuery(ECC_Pawn);
  Objects.AddObjectTypesToQuery(ECC_WorldDynamic);
  FCollisionQueryParams Query(SCENE_QUERY_STAT(NyDoorSafety),false,this);
  const bool bOccupied=GetWorld()->OverlapAnyTestByObjectType(
    GetActorLocation(),GetActorQuat(),Objects,
-   FCollisionShape::MakeBox(FVector(95.f,70.f,125.f)),Query);
+   FCollisionShape::MakeBox(FVector(95.f,70.f,105.f)),Query);
  if(bOccupied){
   GetWorldTimerManager().SetTimer(DoorCloseTimer,this,
     &ANyBuildPiece::TryCloseDoor,1.f,false);
