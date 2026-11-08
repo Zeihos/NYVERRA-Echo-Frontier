@@ -43,6 +43,21 @@ void ANyResource::UpdateLook() {
    return;
   }
  }
+ // Optional 0.57 material assets have explicit base-color / roughness /
+ // emissive parameters. BasicShapes' default material is not guaranteed to
+ // expose a "Color" parameter, so use an authored material when available.
+ const TCHAR* PrototypeMaterial=Kind==ENyResourceKind::Water?
+  TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyWater_Proto057.M_NyWater_Proto057"):
+  Kind==ENyResourceKind::Berries?
+  TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyBerries_Proto057.M_NyBerries_Proto057"):
+  Kind==ENyResourceKind::EchoShard?
+  TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyEcho_Proto057.M_NyEcho_Proto057"):nullptr;
+ if(PrototypeMaterial){
+  if(UMaterialInterface* Surface=LoadObject<UMaterialInterface>(nullptr,PrototypeMaterial)){
+   Mesh->SetMaterial(0,Surface);
+   return;
+  }
+ }
  if(UMaterialInstanceDynamic* Material=Mesh->CreateAndSetMaterialInstanceDynamic(0)) {
   const FLinearColor Color=Kind==ENyResourceKind::Wood?FLinearColor(0.20f,0.34f,0.13f):Kind==ENyResourceKind::Stone?FLinearColor(0.22f,0.29f,0.31f):Kind==ENyResourceKind::Berries?FLinearColor(0.7f,0.04f,0.12f):
    Kind==ENyResourceKind::Water?FLinearColor(0.09f,0.39f,0.86f):
