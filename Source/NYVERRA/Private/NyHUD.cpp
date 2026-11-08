@@ -2,6 +2,7 @@
 #include "NyCharacter.h"
 #include "NyResource.h"
 #include "NyLootCrate.h"
+#include "NyBuildPiece.h"
 #include "Engine/EngineTypes.h"
 #include "NyWorldState.h"
 #include "Engine/World.h"
@@ -14,7 +15,7 @@ void ANyHUD::DrawHUD(){
  DrawText(TEXT("NYVERRA / ECHO FRONTIER  -  DEVELOPMENT BUILD"),FLinearColor(0.1f,0.9f,0.9f),28,24,nullptr,1.1f);
  // Two short control rows stay readable on typical 1366px and 1920px screens.
  DrawText(TEXT("WASD MOVE  |  MOUSE LOOK  |  SPACE JUMP  |  SHIFT SPRINT  |  LMB ATTACK  |  E GATHER  |  I INVENTORY"),FLinearColor::White,28,56,nullptr,0.9f);
- DrawText(TEXT("1 FOUNDATION  |  2 WALL  |  3 AXE  |  4 PICKAXE  |  F EAT  |  Q DRINK  |  TAB CURSOR"),FLinearColor(.77f,.87f,.91f),28,78,nullptr,0.9f);
+ DrawText(TEXT("1 FOUNDATION  |  2 WALL  |  R REPAIR  |  3 AXE  |  4 PICKAXE  |  F EAT  |  Q DRINK"),FLinearColor(.77f,.87f,.91f),28,78,nullptr,0.9f);
  if(const ANyCharacter* P=Cast<ANyCharacter>(GetOwningPawn())){
   const FString Info=FString::Printf(TEXT("WOOD %d   STONE %d   ECHO %d   BERRIES %d   WATER %d"),
    P->Wood,P->Stone,P->Echo,P->Berries,P->CountItem(ENyItemId::Water));
@@ -81,9 +82,19 @@ void ANyHUD::DrawHUD(){
      if(Crate->bAvailable &&
         FVector::DistSquared(P->GetActorLocation(),Crate->GetActorLocation())<=FMath::Square(500.f))
       Prompt=TEXT("E  OPEN SUPPLY CRATE");
+    }else if(const ANyBuildPiece* Piece=Cast<ANyBuildPiece>(Target)){
+     const TCHAR* Name=Piece->PieceType==0?TEXT("FOUNDATION"):TEXT("WALL");
+     const bool bOwner=Piece->BuilderPlayerState&&Piece->BuilderPlayerState==P->GetPlayerState();
+     const bool bMeleeRange=FVector::DistSquared(Eye,Hit.ImpactPoint)<=FMath::Square(190.f);
+     const bool bRepairRange=FVector::DistSquared(Eye,Hit.ImpactPoint)<=FMath::Square(350.f);
+     const FString Action=bOwner && bRepairRange && Piece->Durability<Piece->MaxDurability?
+      TEXT(" | R REPAIR (1 WOOD + 1 STONE)"):
+      bMeleeRange?TEXT(" | LMB RAID"):TEXT(" | APPROACH TO RAID");
+     Prompt=FString::Printf(TEXT("%s %.0f/%.0f HP%s"),Name,Piece->Durability,
+                            Piece->MaxDurability,*Action);
     }
     if(!Prompt.IsEmpty())
-     DrawText(Prompt,FLinearColor(.52f,.91f,1.f),X*.5f-110.f,Y*.5f+38.f,nullptr,.95f);
+     DrawText(Prompt,FLinearColor(.52f,.91f,1.f),X*.5f-165.f,Y*.5f+38.f,nullptr,.95f);
    }
   }
  }
