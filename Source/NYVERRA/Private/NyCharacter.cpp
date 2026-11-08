@@ -44,6 +44,7 @@ void ANyCharacter::SetupPlayerInputComponent(UInputComponent* Input){
  Input->BindAction(TEXT("Interact"),IE_Pressed,this,&ANyCharacter::Interact);
  Input->BindAction(TEXT("BuildFoundation"),IE_Pressed,this,&ANyCharacter::PlaceFoundation);
  Input->BindAction(TEXT("BuildWall"),IE_Pressed,this,&ANyCharacter::PlaceWall);
+ Input->BindAction(TEXT("BuildDoor"),IE_Pressed,this,&ANyCharacter::PlaceDoor);
  Input->BindAction(TEXT("RepairPiece"),IE_Pressed,this,&ANyCharacter::RepairPiece);
  Input->BindAction(TEXT("EatBerries"),IE_Pressed,this,&ANyCharacter::EatBerries);
  Input->BindAction(TEXT("DrinkWater"),IE_Pressed,this,&ANyCharacter::DrinkWater);
@@ -207,6 +208,7 @@ void ANyCharacter::RespawnAfterDeath(){
 }
 void ANyCharacter::PlaceFoundation(){if(!bInventoryOpen&&!bIsDead)ServerPlacePiece(0);}
 void ANyCharacter::PlaceWall(){if(!bInventoryOpen&&!bIsDead)ServerPlacePiece(1);}
+void ANyCharacter::PlaceDoor(){if(!bInventoryOpen&&!bIsDead)ServerPlacePiece(2);}
 void ANyCharacter::RepairPiece(){if(!bInventoryOpen&&!bIsDead)ServerRepairPiece();}
 void ANyCharacter::EatBerries(){if(!bIsDead&&!bInventoryOpen)ServerEatBerries();}
 void ANyCharacter::DrinkWater(){if(!bIsDead&&!bInventoryOpen)ServerDrinkWater();}
@@ -319,7 +321,10 @@ void ANyCharacter::Tick(float DT){
 }
 void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  if(Health<=0.f||bIsDead)return;
- if(!HasAuthority()||!IsValid(GetPlayerState())||Type>1||CountItem(ENyItemId::Wood)<4||CountItem(ENyItemId::Stone)<2)return;
+ if(!HasAuthority()||!IsValid(GetPlayerState())||Type>2)return;
+ const int32 WoodCost=Type==2?6:4;
+ const int32 StoneCost=Type==2?4:2;
+ if(CountItem(ENyItemId::Wood)<WoodCost||CountItem(ENyItemId::Stone)<StoneCost)return;
  // Reject rapid build RPC spam on the dedicated server.
  const float Now = GetWorld()->GetTimeSeconds();
  if (Now - LastBuildTime < 0.35f) return;
@@ -349,17 +354,18 @@ void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  // Walls may attach to the top edge of a foundation, but foundations
  // cannot stack, and no structure may be built on top of an existing wall.
  ANyBuildPiece* Foundation=Cast<ANyBuildPiece>(GroundHit.GetActor());
- if(Foundation && (Type!=1 || Foundation->PieceType!=0))return;
+ if(Foundation && (Type==0 || Foundation->PieceType!=0))return;
  if(GroundHit.ImpactNormal.Z<0.85f || !GroundHit.GetComponent())return;
  // Authoritative foundations are explicit valid supports even if their
  // runtime-spawned mesh component reports Movable on this engine version.
  if(!Foundation && GroundHit.GetComponent()->Mobility!=EComponentMobility::Static)return;
  // 240 cm wall length + 30 cm thickness allows neighboring perpendicular
  // walls to meet at corners without collider overlap. Foundation is 300x300.
- const FVector Extent=Type==0?FVector(150.f,150.f,15.f):FVector(120.f,15.f,125.f);
+ const FVector Extent=Type==0?FVector(150.f,150.f,15.f):
+  Type==1?FVector(120.f,15.f,125.f):FVector(90.f,12.5f,120.f);
  FRotator Rot=Type==0?FRotator::ZeroRotator:FRotator(0.f,FMath::GridSnap(GetActorRotation().Yaw,90.f),0.f);
  P.Z=GroundHit.ImpactPoint.Z+Extent.Z;
- if(Type==1 && Foundation){
+ if((Type==1 && Foundation)||(Type==2 && Foundation)){
   // The closest side to the player selects one of four foundation edges.
   // Geometry and collision are calculated ONLY from server-owned actors.
   const FVector Delta=GetActorLocation()-Foundation->GetActorLocation();
@@ -394,7 +400,7 @@ void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  }
  if(ANyBuildPiece* Piece=GetWorld()->SpawnActor<ANyBuildPiece>(P,Rot)){
   // If the item transaction is rejected, remove the spawned piece.
-  if (!SpendItems(ENyItemId::Wood,4,ENyItemId::Stone,2)) { Piece->Destroy(); return; }
+  if (!SpendItems(ENyItemId::Wood,WoodCost,ENyItemId::Stone,StoneCost)) { Piece->Destroy(); return; }
   Piece->Initialize(Type,GetPlayerState());
   LastBuildTime = Now; // Only successful placements trigger the build cooldown.
  }
@@ -441,6 +447,14 @@ void ANyCharacter::ServerInteract_Implementation(){
  FCollisionQueryParams Params(SCENE_QUERY_STAT(NyHarvest),false,this);
  const FVector End=Eye+Aim.Vector()*420.f;
  if(!GetWorld()->LineTraceSingleByChannel(Hit,Eye,End,ECC_Visibility,Params))return;
+ // A closed locked door is the first visible hit. Only its current builder
+ // can open it, using the existing server-owned line trace and PlayerState.
+ if(ANyBuildPiece* Door=Cast<ANyBuildPiece>(Hit.GetActor())){
+  if(Door->PieceType==2 && !Door->bDoorOpen &&
+     FVector::DistSquared(GetActorLocation(),Door->GetActorLocation())<=FMath::Square(450.f))
+   Door->TryOpenDoor(GetPlayerState());
+  return;
+ }
  if (ANyLootCrate* Crate = Cast<ANyLootCrate>(Hit.GetActor())) {
   if (FVector::DistSquared(GetActorLocation(), Crate->GetActorLocation()) > FMath::Square(500.f)) return;
   Crate->TryLoot(this);
