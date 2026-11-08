@@ -38,7 +38,8 @@ foreach ($line in $dirty) {
     if ($line.Length -le 3) { continue }
     $relative = $line.Substring(3).Trim('"').Replace('\', '/')
     if (-not ($relative.StartsWith("Content/VisualPolishSource/Terrain/") -or
-              $relative.StartsWith("Content/NYVERRA/VisualPolish/"))) {
+              $relative.StartsWith("Content/NYVERRA/VisualPolish/") -or
+              $relative -eq "Content/Maps/TestWorld_Visual056.umap")) {
         throw "Unrelated modified file present: $relative. Commit/stash it first."
     }
 }
@@ -51,13 +52,23 @@ if ($dirty.Count -eq 0) {
 & git -C $repo add -- "Content/VisualPolishSource/Terrain"
 if ($LASTEXITCODE -ne 0) { throw "Failed to stage texture PNG files" }
 $ueAssetsPath = Join-Path $repo "Content/NYVERRA/VisualPolish"
-if ($WithImportedAssets -and (Test-Path -LiteralPath $ueAssetsPath)) {
+if ($WithImportedAssets) {
+    if (!(Test-Path -LiteralPath $ueAssetsPath)) {
+        throw "Missing imported Unreal assets; run VisualPolish056 installer first"
+    }
     & git -C $repo add -- "Content/NYVERRA/VisualPolish"
     if ($LASTEXITCODE -ne 0) { throw "Failed to stage imported Unreal .uassets" }
+    $visualMap = Join-Path $repo "Content/Maps/TestWorld_Visual056.umap"
+    if (Test-Path -LiteralPath $visualMap) {
+        & git -C $repo add -- "Content/Maps/TestWorld_Visual056.umap"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to stage safely generated visual map" }
+    } else {
+        Write-Warning "Visual test .umap not found. Textures and assets will be uploaded without a level."
+    }
 }
 & git -C $repo diff --cached --quiet
 if ($LASTEXITCODE -eq 1) {
-    & git -C $repo commit -m "Import NYVERRA Visual Polish 0.55 terrain source textures"
+    & git -C $repo commit -m "NYVERRA 0.56: upload PBR source textures, UE materials and safe visual test map"
     if ($LASTEXITCODE -ne 0) { throw "Commit failed" }
 } elseif ($LASTEXITCODE -ne 0) {
     throw "Git diff error"
@@ -66,7 +77,7 @@ if ($LASTEXITCODE -eq 1) {
 if ($LASTEXITCODE -ne 0) {
     throw "Push failed (likely non-fast-forward). Your local commit is safe. Do not force push."
 }
-Write-Host "[SUCCESS] Visual source textures uploaded to PRIVATE NYVERRA main." -ForegroundColor Green
+Write-Host "[SUCCESS] Visual files pushed to PRIVATE NYVERRA main." -ForegroundColor Green
 if (-not $WithImportedAssets) {
     Write-Host "[NEXT] Run Unreal Editor import and apply scripts; then rerun with -WithImportedAssets."
 }
