@@ -40,6 +40,7 @@ class TestWaterSurvivalLoop(unittest.TestCase):
         self.assertIn("SpendItems(ENyItemId::Water,1,", drink)
         self.assertLess(drink.index("SpendItems("), drink.index("Thirst=FMath::Min(100.f,Thirst+35.f)"))
         self.assertIn("ForceNetUpdate()", drink)
+        self.assertIn("Now-LastDrinkTime<0.6f", drink)
         self.assertNotIn("AddItem(", drink)
 
     def test_water_gather_uses_existing_atomic_server_transaction(self):
@@ -96,6 +97,18 @@ class TestWaterSurvivalLoop(unittest.TestCase):
             self.assertIn("!bInventoryOpen", part, signature)
         self.assertIn("if(bInventoryOpen){StopJumping();StopSprint();}", cpp)
         self.assertIn("if(bInventoryOpen)return; // Cursor state", cpp)
+
+
+    def test_optional_new_resource_materials_are_versioned_and_non_destructive(self):
+        material_script = source("Tools/create_consumable_materials_057.py")
+        finalizer = source("Tools/finalize_visual_polish_056.py")
+        resources = source("Source/NYVERRA/Private/NyResource.cpp")
+        for kind in ("Water", "Berries", "Echo"):
+            self.assertIn('("'+kind+'"', material_script)
+            self.assertIn("M_Ny"+kind+"_Proto057", resources)
+        self.assertIn("if E.does_asset_exist(path):", material_script)
+        self.assertIn("create_consumable_materials_057.py", finalizer)
+        self.assertIn("MaterialProperty.MP_EMISSIVE_COLOR", material_script)
 
 
 if __name__ == "__main__":
