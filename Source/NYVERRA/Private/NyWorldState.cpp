@@ -140,11 +140,11 @@ void ANyWorldState::GenerateLocalTerrain(){
  // VisualPolish PBR surfaces are optional until installed by Unreal Editor.
  // Never require content to exist for a dedicated server or older test map.
  UMaterialInterface* GrassSurface=LoadObject<UMaterialInterface>(
-   nullptr,TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyGrass_PBR055.M_NyGrass_PBR055"));
+   nullptr,TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyGrass_PBR056.M_NyGrass_PBR056"));
  UMaterialInterface* RockSurface=LoadObject<UMaterialInterface>(
-   nullptr,TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyRock_PBR055.M_NyRock_PBR055"));
+   nullptr,TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyRock_PBR056.M_NyRock_PBR056"));
  UMaterialInterface* SoilSurface=LoadObject<UMaterialInterface>(
-   nullptr,TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NySoil_PBR055.M_NySoil_PBR055"));
+   nullptr,TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NySoil_PBR056.M_NySoil_PBR056"));
  auto MakeInstances=[&](const TCHAR* Name,UStaticMesh* Shape)->UHierarchicalInstancedStaticMeshComponent*{
   UHierarchicalInstancedStaticMeshComponent* H=NewObject<UHierarchicalInstancedStaticMeshComponent>(this,Name);
   if(!H)return nullptr;
