@@ -6,9 +6,9 @@ New entry point: `INSTALL_NYVERRA_VISUALS_056_WINDOWS.bat` in the root of the Gi
 
 1. Checks all **9 PNGs**, 1024×1024 RGB/normal or grayscale/roughness, CRC32 and optionally SHA-256 from the included manifest.
 2. Compiles `NYVERRAEditor` through the existing UE5.8 build script.
-3. Imports PBR textures, material graphs and surface variants using `Tools/import_visual_polish_055.py`.
+3. Imports corrected versioned PBR056 materials, texture maps and surface variants using `Tools/import_visual_polish_056.py`.
 4. Creates **a new** `/Game/Maps/TestWorld_Visual056` map using UE5.8 `LevelEditorSubsystem.new_level_from_template`. Original `TestWorld` is not overwritten. On a clean project with no TestWorld, it creates a minimal fallback map first.
-5. Applies PBR055 to recognized landscape/test floor in the visual map, without modifying unrelated artist materials.
+5. Applies PBR056 to recognized landscape/test floor in the visual map, without modifying unrelated artist materials.
 6. Saves the new visual map and verifies the `.umap` and core material `.uasset` exist.
 7. Prompts for OPTIONAL upload of terrain source PNGs, imported Unreal materials and `TestWorld_Visual056.umap` to the user's PRIVATE repo, through the existing protected PowerShell script. No forced Git push.
 
