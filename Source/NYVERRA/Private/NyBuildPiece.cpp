@@ -5,6 +5,8 @@
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 #include "UObject/ConstructorHelpers.h"
+#include "TimerManager.h"
+#include "Engine/EngineTypes.h"
 
 ANyBuildPiece::ANyBuildPiece(){
  bReplicates=true;
@@ -19,20 +21,64 @@ ANyBuildPiece::ANyBuildPiece(){
 }
 
 void ANyBuildPiece::Initialize(uint8 NewType,APlayerState* InBuilder){
- if(!HasAuthority()||NewType>1)return;
+ if(!HasAuthority()||NewType>2||!IsValid(InBuilder))return;
  PieceType=NewType;
- MaxDurability=NewType==0?600.f:360.f;
+ MaxDurability=NewType==0?600.f:NewType==1?360.f:280.f;
  Durability=MaxDurability;
  BuilderPlayerState=InBuilder;
  LastDamageTime=-1000.f;
+ bDoorOpen=false;
  OnRep_Type();
+ OnRep_DoorOpen();
  ForceNetUpdate();
 }
 
 void ANyBuildPiece::OnRep_Type(){
- // Keep collision dimensions matched to the authoritative placement checks:
- // foundation 300 x 300 x 30; wall 240 x 30 x 250 centimeters.
- SetActorScale3D(PieceType==0?FVector(3.f,3.f,.3f):FVector(2.4f,.3f,2.5f));
+ // Initial scale must match authoritative overlap bounds on the server:
+ // foundation 300x300x30; wall 240x30x250; door 180x25x240 cm.
+ SetActorScale3D(PieceType==0?FVector(3.f,3.f,.3f):
+   PieceType==1?FVector(2.4f,.3f,2.5f):FVector(1.8f,.25f,2.4f));
+ OnRep_DoorOpen();
+}
+
+void ANyBuildPiece::OnRep_DoorOpen(){
+ if(!Mesh)return;
+ const bool bOpened=PieceType==2&&bDoorOpen;
+ // Early prototype: while open the slab retracts completely. Unlike a
+ // hidden collider it cannot trap a player walking through the doorway.
+ Mesh->SetVisibility(!bOpened,true);
+ Mesh->SetCollisionEnabled(bOpened?ECollisionEnabled::NoCollision:
+   ECollisionEnabled::QueryAndPhysics);
+}
+
+bool ANyBuildPiece::TryOpenDoor(const APlayerState* Requester){
+ if(!HasAuthority()||PieceType!=2||bDoorOpen||Durability<=0.f||
+    !IsValid(Requester)||BuilderPlayerState!=Requester||!GetWorld())return false;
+ bDoorOpen=true;
+ OnRep_DoorOpen();
+ ForceNetUpdate();
+ GetWorldTimerManager().SetTimer(DoorCloseTimer,this,
+   &ANyBuildPiece::TryCloseDoor,8.f,false);
+ return true;
+}
+
+void ANyBuildPiece::TryCloseDoor(){
+ if(!HasAuthority()||PieceType!=2||!bDoorOpen||!GetWorld())return;
+ // Don't trap a player inside the reappearing closed doorway.
+ FCollisionObjectQueryParams Objects;
+ Objects.AddObjectTypesToQuery(ECC_Pawn);
+ FCollisionQueryParams Query(SCENE_QUERY_STAT(NyDoorSafety),false,this);
+ const bool bOccupied=GetWorld()->OverlapAnyTestByObjectType(
+   GetActorLocation(),GetActorQuat(),Objects,
+   FCollisionShape::MakeBox(FVector(95.f,70.f,125.f)),Query);
+ if(bOccupied){
+  GetWorldTimerManager().SetTimer(DoorCloseTimer,this,
+    &ANyBuildPiece::TryCloseDoor,1.f,false);
+  return;
+ }
+ bDoorOpen=false;
+ OnRep_DoorOpen();
+ ForceNetUpdate();
 }
 
 float ANyBuildPiece::TakeDamage(float DamageAmount,const FDamageEvent& DamageEvent,
@@ -76,4 +122,5 @@ void ANyBuildPiece::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
  DOREPLIFETIME(ANyBuildPiece,Durability);
  DOREPLIFETIME(ANyBuildPiece,MaxDurability);
  DOREPLIFETIME(ANyBuildPiece,BuilderPlayerState);
+ DOREPLIFETIME(ANyBuildPiece,bDoorOpen);
 }
