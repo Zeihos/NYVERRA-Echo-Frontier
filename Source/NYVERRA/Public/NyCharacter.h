@@ -35,6 +35,7 @@ public:
  bool GiveLoot(ENyItemId Item,int32 Quantity);
  UFUNCTION(Server,Reliable) void ServerInteract();
  UFUNCTION(Server,Reliable) void ServerPlacePiece(uint8 Type);
+ UFUNCTION(Server,Reliable) void ServerRepairPiece();
  UPROPERTY(Replicated,BlueprintReadOnly) float Health=100.f;
  UPROPERTY(Replicated,BlueprintReadOnly) float Hunger=100.f;
  virtual void Tick(float DeltaSeconds) override;
@@ -55,6 +56,7 @@ private:
  void Interact();
  void PlaceFoundation();
  void PlaceWall();
+ void RepairPiece();
  void EatBerries();
  void DrinkWater();
  void CraftAxe();
@@ -72,6 +74,7 @@ private:
  float LastInteractionTime=-100.f;
  float LastDrinkTime=-100.f;
  float LastBuildTime=-100.f;
+ float LastRepairTime=-100.f;
  void ToggleMouse();
  void ToggleInventory();
  bool bMouseFree=false;
