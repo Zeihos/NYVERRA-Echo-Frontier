@@ -15,7 +15,7 @@ public:
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Building")
  UStaticMeshComponent* Mesh;
 
- // 0 = foundation (300x300x30), 1 = wall (240x30x250).
+ // 0 = foundation, 1 = wall, 2 = locked door (all dimensions in cm).
  UPROPERTY(ReplicatedUsing=OnRep_Type, BlueprintReadOnly, Category="Building")
  uint8 PieceType=0;
 
@@ -26,6 +26,13 @@ public:
  float MaxDurability=600.f;
  UPROPERTY(Replicated, BlueprintReadOnly, Category="Building")
  APlayerState* BuilderPlayerState=nullptr;
+
+ // Type 2 only. An open door is temporarily non-blocking and closes on a
+ // server timer once the doorway is clear of characters.
+ UPROPERTY(ReplicatedUsing=OnRep_DoorOpen, BlueprintReadOnly, Category="Building")
+ bool bDoorOpen=false;
+ UFUNCTION() void OnRep_DoorOpen();
+ bool TryOpenDoor(const APlayerState* Requester);
 
  void Initialize(uint8 NewType, APlayerState* InBuilder);
  UFUNCTION() void OnRep_Type();
@@ -41,4 +48,6 @@ public:
 
 private:
  float LastDamageTime=-1000.f;
+ FTimerHandle DoorCloseTimer;
+ void TryCloseDoor();
 };
