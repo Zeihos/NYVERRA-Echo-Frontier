@@ -11,7 +11,7 @@ void ANyHUD::DrawHUD(){
  DrawText(TEXT("NYVERRA / ECHO FRONTIER  -  DEVELOPMENT BUILD"),FLinearColor(0.1f,0.9f,0.9f),28,24,nullptr,1.1f);
  // Two short control rows stay readable on typical 1366px and 1920px screens.
  DrawText(TEXT("WASD MOVE  |  MOUSE LOOK  |  SPACE JUMP  |  SHIFT SPRINT  |  LMB ATTACK  |  E GATHER  |  I INVENTORY"),FLinearColor::White,28,56,nullptr,0.9f);
- DrawText(TEXT("1 FOUNDATION  |  2 WALL  |  3 AXE  |  4 PICKAXE  |  F EAT BERRIES  |  TAB CURSOR"),FLinearColor(.77f,.87f,.91f),28,78,nullptr,0.9f);
+ DrawText(TEXT("1 FOUNDATION  |  2 WALL  |  3 AXE  |  4 PICKAXE  |  F EAT  |  Q DRINK  |  TAB CURSOR"),FLinearColor(.77f,.87f,.91f),28,78,nullptr,0.9f);
  if(const ANyCharacter* P=Cast<ANyCharacter>(GetOwningPawn())){
   const FString Info=FString::Printf(TEXT("WOOD  %d     STONE  %d     ECHO  %d     BERRIES  %d"),P->Wood,P->Stone,P->Echo,P->Berries);
   FString Slots=FString::Printf(TEXT("INVENTORY %d / %d  |  AXE %d  |  PICKAXE %d"),P->Inventory.Num(),P->MaxSlots,P->CountItem(ENyItemId::Axe),P->CountItem(ENyItemId::Pickaxe));
