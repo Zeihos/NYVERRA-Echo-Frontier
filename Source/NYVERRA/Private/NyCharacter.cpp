@@ -53,16 +53,17 @@ void ANyCharacter::SetupPlayerInputComponent(UInputComponent* Input){
 }
 void ANyCharacter::TryJump(){if(!bIsDead && Health>0.f && !bInventoryOpen) Jump();}
 void ANyCharacter::StopJumpIfAlive(){StopJumping();}
-void ANyCharacter::Forward(float V){if(!bIsDead&&Controller&&V!=0)AddMovementInput(GetActorForwardVector(),V);}
-void ANyCharacter::Right(float V){if(!bIsDead&&Controller&&V!=0)AddMovementInput(GetActorRightVector(),V);}
+void ANyCharacter::Forward(float V){if(!bIsDead&&!bInventoryOpen&&Controller&&V!=0)AddMovementInput(GetActorForwardVector(),V);}
+void ANyCharacter::Right(float V){if(!bIsDead&&!bInventoryOpen&&Controller&&V!=0)AddMovementInput(GetActorRightVector(),V);}
 void ANyCharacter::StartSprint(){
- if(bIsDead||Health<=0.f||Stamina<=5.f)return;
+ if(bIsDead||bInventoryOpen||Health<=0.f||Stamina<=5.f)return;
  bWantsSprint=true;OnRep_Sprint();ServerSetSprint(true);
 }
 void ANyCharacter::StopSprint(){
  bWantsSprint=false;OnRep_Sprint();ServerSetSprint(false);
 }
 void ANyCharacter::ToggleMouse(){
+ if(bInventoryOpen)return; // Cursor state is owned by the open inventory.
  if(APlayerController* PC=Cast<APlayerController>(GetController())){
   bMouseFree=!bMouseFree;
   PC->bShowMouseCursor=bMouseFree;
@@ -84,6 +85,7 @@ FString ANyCharacter::GetItemName(ENyItemId Item){
 }
 void ANyCharacter::ToggleInventory(){
  bInventoryOpen=!bInventoryOpen;
+ if(bInventoryOpen){StopJumping();StopSprint();}
  if(APlayerController* PC=Cast<APlayerController>(GetController())){
   PC->bShowMouseCursor=bInventoryOpen;
   bMouseFree=bInventoryOpen;
@@ -99,8 +101,8 @@ void ANyCharacter::ServerSetSprint_Implementation(bool bSprinting){
  bWantsSprint=bSprinting&&!bIsDead&&Health>0.f&&Stamina>5.f;
  OnRep_Sprint();ForceNetUpdate();
 }
-void ANyCharacter::Interact(){if(!bIsDead) ServerInteract();}
-void ANyCharacter::MeleeAttack(){if(!bIsDead) ServerMeleeAttack();}
+void ANyCharacter::Interact(){if(!bIsDead&&!bInventoryOpen) ServerInteract();}
+void ANyCharacter::MeleeAttack(){if(!bIsDead&&!bInventoryOpen) ServerMeleeAttack();}
 void ANyCharacter::ServerMeleeAttack_Implementation(){
  if(!HasAuthority()||bIsDead||Health<=0.f||!Controller)return;
  const float Now=GetWorld()->GetTimeSeconds();
@@ -194,12 +196,12 @@ void ANyCharacter::RespawnAfterDeath(){
  GetCharacterMovement()->MaxWalkSpeed=450.f;
  ForceNetUpdate();
 }
-void ANyCharacter::PlaceFoundation(){ServerPlacePiece(0);}
-void ANyCharacter::PlaceWall(){ServerPlacePiece(1);}
+void ANyCharacter::PlaceFoundation(){if(!bInventoryOpen&&!bIsDead)ServerPlacePiece(0);}
+void ANyCharacter::PlaceWall(){if(!bInventoryOpen&&!bIsDead)ServerPlacePiece(1);}
 void ANyCharacter::EatBerries(){if(!bIsDead&&!bInventoryOpen)ServerEatBerries();}
 void ANyCharacter::DrinkWater(){if(!bIsDead&&!bInventoryOpen)ServerDrinkWater();}
-void ANyCharacter::CraftAxe(){ServerCraft(0);}
-void ANyCharacter::CraftPickaxe(){ServerCraft(1);}
+void ANyCharacter::CraftAxe(){if(!bInventoryOpen&&!bIsDead)ServerCraft(0);}
+void ANyCharacter::CraftPickaxe(){if(!bInventoryOpen&&!bIsDead)ServerCraft(1);}
 bool ANyCharacter::GiveLoot(ENyItemId Item,int32 Quantity){return HasAuthority()&&AddItem(Item,Quantity);}
 int32 ANyCharacter::CountItem(ENyItemId Item) const {
  int32 Total=0; for(const FNyItemStack& Stack: Inventory) if(Stack.Item==Item) Total+=Stack.Quantity;
