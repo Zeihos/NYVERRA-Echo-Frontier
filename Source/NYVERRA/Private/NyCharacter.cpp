@@ -287,8 +287,10 @@ void ANyCharacter::ServerEatBerries_Implementation(){
 // quantity/target, no refill while dead, and no free rehydration at full thirst.
 void ANyCharacter::ServerDrinkWater_Implementation(){
  if(!HasAuthority()||bIsDead||Health<=0.f||Thirst>=100.f)return;
- if(CountItem(ENyItemId::Water)<1)return;
+ const float Now=GetWorld()->GetTimeSeconds();
+ if(Now-LastDrinkTime<0.6f||CountItem(ENyItemId::Water)<1)return;
  if(SpendItems(ENyItemId::Water,1,ENyItemId::Wood,0)){
+  LastDrinkTime=Now;
   Thirst=FMath::Min(100.f,Thirst+35.f);
   ForceNetUpdate();
  }
