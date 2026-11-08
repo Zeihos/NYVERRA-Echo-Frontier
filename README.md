@@ -102,3 +102,12 @@ The launcher:
 No force push, no automatic override of startup maps. See [VISUAL_POLISH_056_STATUS.md](VISUAL_POLISH_056_STATUS.md).
 
 **Limitations:** The archive's PNG binary assets are still local-only until uploaded on Windows; the Unreal shader compilation, gameplay rendering and server behavior have not been verified in this environment. 3D character models, foliage detail, animations, and release-quality graphics are not finished.
+
+
+## Alpha 0.57 — renewable hydration and interaction UX
+
+**Current source changes (8 November 2026):** A missing survival gameplay loop has been closed: renewable water nodes, server-validated `Q` drinking (one item restores 35 thirst), four guaranteed sources near spawn and additional POI/wilderness supplies. Existing inventory, replication, anti-duplication checks and resource regeneration are reused. Aiming at an interactable now shows its name and remaining quantity. Inventory focus blocks combat/movement actions and drops sprint.
+
+`Tools/create_consumable_materials_057.py` adds non-destructive prototype Water/Berries/Echo PBR colors. The latest Visual Polish 0.56 installer calls this script automatically through `Tools/finalize_visual_polish_056.py` when source textures have been supplied.
+
+**Windows check:** after `git pull origin main`, run `TEST_ALPHA_057_WINDOWS.bat`. This runs all offline tests and attempts a genuine Unreal Editor build. Then follow [ALPHA_057_QA.md](ALPHA_057_QA.md) for manual two-player tests. Neither compilation nor multiplayer success has been independently confirmed for 0.57.
