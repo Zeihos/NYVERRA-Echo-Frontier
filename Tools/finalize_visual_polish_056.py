@@ -28,6 +28,10 @@ def main():
                                run_name="nyverra_validator")
     validator["main"]()
 
+    # Asset imports are idempotent and must run even if the visual map already
+    # exists (e.g. after an interrupted first import).
+    runpy.run_path(str(TOOLS / "import_visual_polish_055.py"), run_name="__main__")
+
     if E.does_asset_exist(VISUAL_MAP):
         unreal.log_warning("[NYVERRA VISUAL] Existing TestWorld_Visual056 preserved. No level changes.")
         if not VISUAL_DISK.is_file():
@@ -42,9 +46,6 @@ def main():
 
     if not E.does_asset_exist(SOURCE_MAP):
         raise RuntimeError("TestWorld missing after attempted creation")
-
-    # Material creation does NOT touch the open level.
-    runpy.run_path(str(TOOLS / "import_visual_polish_055.py"), run_name="__main__")
 
     # UE5.8 subsystem API: creates a new level from an existing template and
     # leaves the original level package byte-for-byte unchanged.
