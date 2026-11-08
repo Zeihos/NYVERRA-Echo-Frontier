@@ -2,7 +2,7 @@
 
 Private Unreal Engine 5.8 C++ multiplayer survival prototype (Windows; PvP/PvE, building, crafting).
 
-**Latest sources: Alpha 0.53 + UE 5.8 compilation fixes + November core-polish pass.** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
+**Latest sources: Alpha 0.58 (prototype) + Unreal Engine 5.8 compilation fixes.** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
 
 ## First playable test map
 
@@ -111,3 +111,17 @@ No force push, no automatic override of startup maps. See [VISUAL_POLISH_056_STA
 `Tools/create_consumable_materials_057.py` adds non-destructive prototype Water/Berries/Echo PBR colors. The latest Visual Polish 0.56 installer calls this script automatically through `Tools/finalize_visual_polish_056.py` when source textures have been supplied.
 
 **Windows check:** after `git pull origin main`, run `TEST_ALPHA_057_WINDOWS.bat`. This runs all offline tests and attempts a genuine Unreal Editor build. Then follow [ALPHA_057_QA.md](ALPHA_057_QA.md) for manual two-player tests. Neither compilation nor multiplayer success has been independently confirmed for 0.57.
+
+
+## Alpha 0.58 — base raids and owner repairs
+
+The multiplayer construction prototype now has server-owned durability and raids:
+
+- Foundation **600 HP**, wall **360 HP**. HP and builder PlayerState are replicated.
+- A player can melee a visible structure for **35 damage** per validated server hit. Destroying a piece at 0 HP removes it for all connected players.
+- Builders can press **R** to repair their own damaged piece for **1 wood + 1 stone**, restoring up to **75 HP**, but only **12 seconds** after the last attack.
+- The HUD shows visible structure HP and a green/amber/red condition bar. Clients send no structure reference or HP amount to the server for repair.
+
+After `git pull origin main`, run `TEST_ALPHA_058_WINDOWS.bat` on a Windows computer with Unreal Engine 5.8 to execute offline checks and build `NYVERRAEditor`. Then follow [ALPHA_058_QA.md](ALPHA_058_QA.md) for the **two-player** manual raid/repair tests. The current GitHub source edits have not yet been independently compiled or tested in Unreal Engine.
+
+**Still absent:** permanent account/ownership persistence, raid explosives, doors, raid loot, full multiplayer server QA, finished realistic assets and a packaged game. The tested `TestWorld.umap` and PBR source textures also need to be synchronized from Windows.
