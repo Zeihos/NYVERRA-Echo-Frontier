@@ -29,8 +29,8 @@ void ANyResource::UpdateLook() {
  // the VisualPolish assets. BasicShapes materials stay a safe fallback.
  if(Kind==ENyResourceKind::Stone || Kind==ENyResourceKind::Wood){
   const TCHAR* Path=Kind==ENyResourceKind::Stone?
-   TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyRock_PBR055.M_NyRock_PBR055"):
-   TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NySoil_PBR055.M_NySoil_PBR055");
+   TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyRock_PBR056.M_NyRock_PBR056"):
+   TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NySoil_PBR056.M_NySoil_PBR056");
   if(UMaterialInterface* Surface=LoadObject<UMaterialInterface>(nullptr,Path)){
    Mesh->SetMaterial(0,Surface);
    return;
