@@ -56,6 +56,7 @@ private:
  void Interact();
  void PlaceFoundation();
  void PlaceWall();
+ void PlaceDoor();
  void RepairPiece();
  void EatBerries();
  void DrinkWater();
