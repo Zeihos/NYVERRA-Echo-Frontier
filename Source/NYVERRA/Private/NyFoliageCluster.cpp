@@ -2,6 +2,7 @@
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Materials/MaterialInterface.h"
 
 ANyFoliageCluster::ANyFoliageCluster()
 {
@@ -29,6 +30,22 @@ ANyFoliageCluster::ANyFoliageCluster()
     {
         Rocks->SetStaticMesh(Sphere.Object);
         Shrubs->SetStaticMesh(Sphere.Object);
+    }
+    // Optional PBR055 art: old maps remain loadable without imported assets.
+    if (UMaterialInterface* Soil = LoadObject<UMaterialInterface>(
+            nullptr, TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NySoil_PBR055.M_NySoil_PBR055")))
+    {
+        Trees->SetMaterial(0, Soil);
+    }
+    if (UMaterialInterface* Rock = LoadObject<UMaterialInterface>(
+            nullptr, TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyRock_PBR055.M_NyRock_PBR055")))
+    {
+        Rocks->SetMaterial(0, Rock);
+    }
+    if (UMaterialInterface* Grass = LoadObject<UMaterialInterface>(
+            nullptr, TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyGrass_PBR055.M_NyGrass_PBR055")))
+    {
+        Shrubs->SetMaterial(0, Grass);
     }
 }
 
