@@ -4,7 +4,7 @@
 #include "NyCharacter.generated.h"
 class UCameraComponent;
 UENUM(BlueprintType)
-enum class ENyItemId : uint8 { Wood, Stone, EchoShard, Berries, Axe, Pickaxe };
+enum class ENyItemId : uint8 { Wood, Stone, EchoShard, Berries, Axe, Pickaxe, Water };
 USTRUCT(BlueprintType)
 struct FNyItemStack {
  GENERATED_BODY()
