@@ -24,7 +24,9 @@ def main():
         raise RuntimeError("Wrong project directory: " + str(ROOT))
 
     # Validate PNGs BEFORE creating or modifying any level or imported asset.
-    runpy.run_path(str(TOOLS / "validate_visual_pack_056.py"), run_name="__main__")
+    validator = runpy.run_path(str(TOOLS / "validate_visual_pack_056.py"),
+                               run_name="nyverra_validator")
+    validator["main"]()
 
     if E.does_asset_exist(VISUAL_MAP):
         unreal.log_warning("[NYVERRA VISUAL] Existing TestWorld_Visual056 preserved. No level changes.")
