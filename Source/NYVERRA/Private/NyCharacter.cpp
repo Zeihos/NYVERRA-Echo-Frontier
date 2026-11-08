@@ -354,6 +354,9 @@ void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  // Walls may attach to the top edge of a foundation, but foundations
  // cannot stack, and no structure may be built on top of an existing wall.
  ANyBuildPiece* Foundation=Cast<ANyBuildPiece>(GroundHit.GetActor());
+ // Doors must attach to an existing foundation. A ground-only floating locked
+ // door would bypass the base layout and could be used to block spawn routes.
+ if(Type==2 && (!Foundation || Foundation->PieceType!=0))return;
  if(Foundation && (Type==0 || Foundation->PieceType!=0))return;
  if(GroundHit.ImpactNormal.Z<0.85f || !GroundHit.GetComponent())return;
  // Authoritative foundations are explicit valid supports even if their
