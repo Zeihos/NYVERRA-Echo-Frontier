@@ -1,5 +1,8 @@
 #include "NyHUD.h"
 #include "NyCharacter.h"
+#include "NyResource.h"
+#include "NyLootCrate.h"
+#include "Engine/EngineTypes.h"
 #include "NyWorldState.h"
 #include "Engine/World.h"
 #include "Engine/Canvas.h"
@@ -54,6 +57,35 @@ void ANyHUD::DrawHUD(){
   DrawVital(TEXT("HUNGER"),P->Hunger,FLinearColor(.91f,.64f,.23f),1);
   DrawVital(TEXT("THIRST"),P->Thirst,FLinearColor(.29f,.72f,.94f),2);
   DrawVital(TEXT("STAMINA"),P->Stamina,FLinearColor(.34f,.85f,.67f),3);
+  // Context-sensitive interaction prompt: uses the same eye trace and maximum
+  // range as the server, but only to display a hint (never to grant items).
+  if(!P->bIsDead && !P->bInventoryOpen && GetWorld()){
+   const FVector Eye=P->GetPawnViewLocation();
+   const FVector End=Eye+P->GetControlRotation().Vector()*420.f;
+   FHitResult Hit;
+   FCollisionQueryParams Params(SCENE_QUERY_STAT(NyHudInteract),false,P);
+   if(GetWorld()->LineTraceSingleByChannel(Hit,Eye,End,ECC_Visibility,Params)){
+    const AActor* Target=Hit.GetActor();
+    FString Prompt;
+    if(const ANyResource* Resource=Cast<ANyResource>(Target)){
+     if(Resource->Remaining>0 &&
+        FVector::DistSquared(P->GetActorLocation(),Resource->GetActorLocation())<=FMath::Square(500.f)){
+      const ENyItemId Item=Resource->Kind==ENyResourceKind::Wood?ENyItemId::Wood:
+        Resource->Kind==ENyResourceKind::Stone?ENyItemId::Stone:
+        Resource->Kind==ENyResourceKind::Berries?ENyItemId::Berries:
+        Resource->Kind==ENyResourceKind::Water?ENyItemId::Water:ENyItemId::EchoShard;
+      Prompt=FString::Printf(TEXT("E  GATHER %s  (%d LEFT)"),
+        *ANyCharacter::GetItemName(Item),Resource->Remaining);
+     }
+    }else if(const ANyLootCrate* Crate=Cast<ANyLootCrate>(Target)){
+     if(Crate->bAvailable &&
+        FVector::DistSquared(P->GetActorLocation(),Crate->GetActorLocation())<=FMath::Square(500.f))
+      Prompt=TEXT("E  OPEN SUPPLY CRATE");
+    }
+    if(!Prompt.IsEmpty())
+     DrawText(Prompt,FLinearColor(.52f,.91f,1.f),X*.5f-110.f,Y*.5f+38.f,nullptr,.95f);
+   }
+  }
  }
  if(const ANyWorldState* State=GetWorld()?GetWorld()->GetGameState<ANyWorldState>():nullptr){
   DrawText(FString::Printf(TEXT("TIME %02d:%02d  |  WEATHER %s  (%ds)"),FMath::FloorToInt(State->TimeOfDayHours),FMath::FloorToInt(FMath::Frac(State->TimeOfDayHours)*60.f),State->bRainActive?TEXT("RAIN / FOG"):TEXT("CLEAR"),State->WeatherSeconds),FLinearColor(.7f,.85f,1.f),28,150);
