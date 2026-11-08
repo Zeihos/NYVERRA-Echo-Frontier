@@ -68,6 +68,8 @@ void ANyHUD::DrawHUD(){
    if(GetWorld()->LineTraceSingleByChannel(Hit,Eye,End,ECC_Visibility,Params)){
     const AActor* Target=Hit.GetActor();
     FString Prompt;
+    bool bShowStructureHealth=false;
+    float StructureHealthRatio=0.f;
     if(const ANyResource* Resource=Cast<ANyResource>(Target)){
      if(Resource->Remaining>0 &&
         FVector::DistSquared(P->GetActorLocation(),Resource->GetActorLocation())<=FMath::Square(500.f)){
@@ -92,9 +94,21 @@ void ANyHUD::DrawHUD(){
       bMeleeRange?TEXT(" | LMB RAID"):TEXT(" | APPROACH TO RAID");
      Prompt=FString::Printf(TEXT("%s %.0f/%.0f HP%s"),Name,Piece->Durability,
                             Piece->MaxDurability,*Action);
+     bShowStructureHealth=true;
+     StructureHealthRatio=Piece->MaxDurability>0.f?
+      FMath::Clamp(Piece->Durability/Piece->MaxDurability,0.f,1.f):0.f;
     }
     if(!Prompt.IsEmpty())
      DrawText(Prompt,FLinearColor(.52f,.91f,1.f),X*.5f-165.f,Y*.5f+38.f,nullptr,.95f);
+    if(bShowStructureHealth){
+     const float BarX=X*.5f-120.f;
+     const float BarY=Y*.5f+65.f;
+     DrawRect(FLinearColor(.05f,.08f,.1f,.9f),BarX,BarY,240.f,10.f);
+     const FLinearColor Tint=StructureHealthRatio>.6f?
+      FLinearColor(.32f,.84f,.62f):StructureHealthRatio>.3f?
+      FLinearColor(.94f,.72f,.25f):FLinearColor(.95f,.31f,.29f);
+     DrawRect(Tint,BarX+1.f,BarY+1.f,238.f*StructureHealthRatio,8.f);
+    }
    }
   }
  }
