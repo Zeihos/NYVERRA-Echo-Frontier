@@ -73,3 +73,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Sync-TestWorld-ToGit
 The script checks `main`, the exact remote, clean working tree and existing map hashes. It refuses to overwrite an unrelated map, updates all three default-map keys and pushes the authored `.umap`. Custom `.uasset` dependencies, if any, must be synced separately.
 
 **Still unverified:** Windows C++ build after this polish pass; actual saved-map compatibility; two-player PIE networking; AI navigation after respawn; building four walls on a foundation; dedicated-server build; packaged game; release-quality visuals. The 52 historical Alpha ZIP archives are also still missing from GitHub.
+
+
+## Visual polish 0.55 — 8 November 2026
+
+**Code committed:** new versioned PBR import/assign tools, optional material hookups for existing 3D scenery, and color-coded HUD stat bars. Details: [VISUAL_POLISH_055_STATUS.md](VISUAL_POLISH_055_STATUS.md).
+
+**External PNG package not committed yet:** download the NYVERRA 0.55 visual pack from the ChatGPT conversation, extract into your PRIVATE Git clone beside `NYVERRA.uproject`, then open Unreal Editor and run:
+
+1. `Tools/import_visual_polish_055.py` to create `/Game/NYVERRA/VisualPolish/Textures` and `Materials`.
+2. `Tools/apply_visual_polish_055.py` to assign material to recognized floor/landscape surfaces in the active map (no automatic level save).
+3. Review the result, save the level, and use `Tools/Sync-VisualPolish-ToGitHub.ps1 -WithImportedAssets` from PowerShell to push the PNG and generated `.uasset` files.
+
+**Important:** Gameplay source changes and import scripts are on GitHub now; the nine new PNGs, saved TestWorld and fully imported Unreal materials are NOT confirmed in the repository. High-quality foliage models, characters and enemies are still placeholders, and UE shader/Windows tests are pending.
