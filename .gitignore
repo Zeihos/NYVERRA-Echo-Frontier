@@ -29,3 +29,6 @@ Thumbs.db
 BUILD_ALPHA_*.log
 BUILD_ALPHA_*_ERRORS.txt
 *.ini.bak
+
+# Generated Unreal visual import logs
+VISUAL_POLISH_*.log
