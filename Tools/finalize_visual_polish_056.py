@@ -31,6 +31,10 @@ def main():
     # Asset imports are idempotent and must run even if the visual map already
     # exists (e.g. after an interrupted first import).
     runpy.run_path(str(TOOLS / "import_visual_polish_056.py"), run_name="__main__")
+    # The 0.57 gameplay pass uses optional colored resource materials.
+    # Re-runs preserve previously edited assets and authored levels.
+    runpy.run_path(str(TOOLS / "create_consumable_materials_057.py"),
+                   run_name="__main__")
 
     if E.does_asset_exist(VISUAL_MAP):
         unreal.log_warning("[NYVERRA VISUAL] Existing TestWorld_Visual056 preserved. No level changes.")
