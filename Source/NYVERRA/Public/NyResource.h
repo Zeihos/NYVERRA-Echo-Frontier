@@ -4,7 +4,7 @@
 #include "NyResource.generated.h"
 class UStaticMeshComponent;
 UENUM(BlueprintType)
-enum class ENyResourceKind : uint8 { Wood, Stone, EchoShard, Berries };
+enum class ENyResourceKind : uint8 { Wood, Stone, EchoShard, Berries, Water };
 UCLASS()
 class NYVERRA_API ANyResource : public AActor {
  GENERATED_BODY()
