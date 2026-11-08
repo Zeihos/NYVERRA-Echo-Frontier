@@ -29,6 +29,7 @@ public:
  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Inventory") int32 MaxSlots = 16;
  UFUNCTION(Server,Reliable) void ServerCraft(uint8 RecipeId);
  UFUNCTION(Server,Reliable) void ServerEatBerries();
+ UFUNCTION(Server,Reliable) void ServerDrinkWater();
  int32 CountItem(ENyItemId Item) const;
  // Server-only loot insertion with full inventory capacity validation.
  bool GiveLoot(ENyItemId Item,int32 Quantity);
@@ -55,6 +56,7 @@ private:
  void PlaceFoundation();
  void PlaceWall();
  void EatBerries();
+ void DrinkWater();
  void CraftAxe();
  void CraftPickaxe();
  void MeleeAttack();
