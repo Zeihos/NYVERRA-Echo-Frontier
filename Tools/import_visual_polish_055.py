@@ -150,17 +150,24 @@ def create_landscape(textures):
                          -1050, yy + i * 300, channel)
             for i, kind in enumerate(TYPES)
         }
+        # LandscapeLayerWeight is ADDITIVE (Base + Layer * Weight). Using it
+        # here would oversaturate albedo and produce invalid PBR normals.
+        # Blend with explicit Lerp (A + (B-A) * Alpha) instead.
         previous = samples["Soil"]
         for j, kind in enumerate(("Grass", "Rock")):
+            weight = MEL.create_material_expression(
+                mat, unreal.MaterialExpressionLandscapeLayerSample,
+                -810 + j * 300, yy + 520)
+            weight.set_editor_property("parameter_name", kind)
+            weight.set_editor_property("preview_weight", 0.0)
             node = MEL.create_material_expression(
-                mat, unreal.MaterialExpressionLandscapeLayerWeight,
+                mat, unreal.MaterialExpressionLinearInterpolate,
                 -580 + j * 300, yy + j * 150)
-            node.set_editor_property("parameter_name", kind)
-            node.set_editor_property("preview_weight", 0.0)
-            output = ("R" if channel == "Roughness" else "RGB")
+            output = "R" if channel == "Roughness" else "RGB"
             MEL.connect_material_expressions(
-                previous, output if j == 0 else "", node, "Base")
-            MEL.connect_material_expressions(samples[kind], output, node, "Layer")
+                previous, output if j == 0 else "", node, "A")
+            MEL.connect_material_expressions(samples[kind], output, node, "B")
+            MEL.connect_material_expressions(weight, "", node, "Alpha")
             previous = node
         prop = {
             "Albedo": unreal.MaterialProperty.MP_BASE_COLOR,
