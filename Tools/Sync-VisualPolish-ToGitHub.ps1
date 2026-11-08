@@ -39,7 +39,10 @@ foreach ($line in $dirty) {
     $relative = $line.Substring(3).Trim('"').Replace('\', '/')
     if (-not ($relative.StartsWith("Content/VisualPolishSource/Terrain/") -or
               $relative.StartsWith("Content/NYVERRA/VisualPolish/") -or
-              $relative -eq "Content/Maps/TestWorld_Visual056.umap")) {
+              $relative -eq "Content/Maps/TestWorld_Visual056.umap" -or
+              $relative -eq "Content/Maps/TestWorld.umap" -or
+              $relative -in @("TEXTURE_MANIFEST.json", "NYVERRA_PBR_Preview.png",
+                              "VISUAL_POLISH_056_README_RU.txt", "START_VISUAL_POLISH_056.bat"))) {
         throw "Unrelated modified file present: $relative. Commit/stash it first."
     }
 }
@@ -51,6 +54,15 @@ if ($dirty.Count -eq 0) {
 }
 & git -C $repo add -- "Content/VisualPolishSource/Terrain"
 if ($LASTEXITCODE -ne 0) { throw "Failed to stage texture PNG files" }
+# Package metadata and preview are safe to track; stage only known names.
+foreach ($name in @("TEXTURE_MANIFEST.json", "NYVERRA_PBR_Preview.png",
+                    "VISUAL_POLISH_056_README_RU.txt", "START_VISUAL_POLISH_056.bat")) {
+    $file = Join-Path $repo $name
+    if (Test-Path -LiteralPath $file) {
+        & git -C $repo add -- $name
+        if ($LASTEXITCODE -ne 0) { throw "Failed to stage $name" }
+    }
+}
 $ueAssetsPath = Join-Path $repo "Content/NYVERRA/VisualPolish"
 if ($WithImportedAssets) {
     if (!(Test-Path -LiteralPath $ueAssetsPath)) {
@@ -58,6 +70,12 @@ if ($WithImportedAssets) {
     }
     & git -C $repo add -- "Content/NYVERRA/VisualPolish"
     if ($LASTEXITCODE -ne 0) { throw "Failed to stage imported Unreal .uassets" }
+    # A clean clone may have generated the base TestWorld as well.
+    $sourceMap = Join-Path $repo "Content/Maps/TestWorld.umap"
+    if (Test-Path -LiteralPath $sourceMap) {
+        & git -C $repo add -- "Content/Maps/TestWorld.umap"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to stage source TestWorld map" }
+    }
     $visualMap = Join-Path $repo "Content/Maps/TestWorld_Visual056.umap"
     if (Test-Path -LiteralPath $visualMap) {
         & git -C $repo add -- "Content/Maps/TestWorld_Visual056.umap"
