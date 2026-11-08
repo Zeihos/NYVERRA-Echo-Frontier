@@ -34,17 +34,17 @@ ANyFoliageCluster::ANyFoliageCluster()
     }
     // Optional PBR055 art: old maps remain loadable without imported assets.
     if (UMaterialInterface* Soil = LoadObject<UMaterialInterface>(
-            nullptr, TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NySoil_PBR055.M_NySoil_PBR055")))
+            nullptr, TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NySoil_PBR056.M_NySoil_PBR056")))
     {
         Trees->SetMaterial(0, Soil);
     }
     if (UMaterialInterface* Rock = LoadObject<UMaterialInterface>(
-            nullptr, TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyRock_PBR055.M_NyRock_PBR055")))
+            nullptr, TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyRock_PBR056.M_NyRock_PBR056")))
     {
         Rocks->SetMaterial(0, Rock);
     }
     if (UMaterialInterface* Grass = LoadObject<UMaterialInterface>(
-            nullptr, TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyGrass_PBR055.M_NyGrass_PBR055")))
+            nullptr, TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyGrass_PBR056.M_NyGrass_PBR056")))
     {
         Shrubs->SetMaterial(0, Grass);
     }
