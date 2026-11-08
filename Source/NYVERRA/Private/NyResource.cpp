@@ -3,6 +3,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Net/UnrealNetwork.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInterface.h"
 #include "TimerManager.h"
 ANyResource::ANyResource() {
  bReplicates = true;
@@ -23,6 +24,17 @@ void ANyResource::UpdateLook() {
  else if(Kind==ENyResourceKind::Stone) SetActorScale3D(FVector(1.0f,0.85f,0.55f));
  else if(Kind==ENyResourceKind::Berries) SetActorScale3D(FVector(0.32f));
  else SetActorScale3D(FVector(0.45f));
+ // Optional high-detail materials are loaded only after artists import
+ // the VisualPolish assets. BasicShapes materials stay a safe fallback.
+ if(Kind==ENyResourceKind::Stone || Kind==ENyResourceKind::Wood){
+  const TCHAR* Path=Kind==ENyResourceKind::Stone?
+   TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NyRock_PBR055.M_NyRock_PBR055"):
+   TEXT("/Game/NYVERRA/VisualPolish/Materials/M_NySoil_PBR055.M_NySoil_PBR055");
+  if(UMaterialInterface* Surface=LoadObject<UMaterialInterface>(nullptr,Path)){
+   Mesh->SetMaterial(0,Surface);
+   return;
+  }
+ }
  if(UMaterialInstanceDynamic* Material=Mesh->CreateAndSetMaterialInstanceDynamic(0)) {
   const FLinearColor Color=Kind==ENyResourceKind::Wood?FLinearColor(0.20f,0.34f,0.13f):Kind==ENyResourceKind::Stone?FLinearColor(0.22f,0.29f,0.31f):Kind==ENyResourceKind::Berries?FLinearColor(0.7f,0.04f,0.12f):FLinearColor(0.0f,0.75f,0.9f);
   Material->SetVectorParameterValue(TEXT("Color"),Color);
