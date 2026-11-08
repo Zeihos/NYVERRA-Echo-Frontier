@@ -67,6 +67,7 @@ void ANyBuildPiece::TryCloseDoor(){
  // Don't trap a player inside the reappearing closed doorway.
  FCollisionObjectQueryParams Objects;
  Objects.AddObjectTypesToQuery(ECC_Pawn);
+ Objects.AddObjectTypesToQuery(ECC_WorldDynamic);
  FCollisionQueryParams Query(SCENE_QUERY_STAT(NyDoorSafety),false,this);
  const bool bOccupied=GetWorld()->OverlapAnyTestByObjectType(
    GetActorLocation(),GetActorQuat(),Objects,
