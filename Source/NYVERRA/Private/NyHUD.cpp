@@ -13,7 +13,8 @@ void ANyHUD::DrawHUD(){
  DrawText(TEXT("WASD MOVE  |  MOUSE LOOK  |  SPACE JUMP  |  SHIFT SPRINT  |  LMB ATTACK  |  E GATHER  |  I INVENTORY"),FLinearColor::White,28,56,nullptr,0.9f);
  DrawText(TEXT("1 FOUNDATION  |  2 WALL  |  3 AXE  |  4 PICKAXE  |  F EAT  |  Q DRINK  |  TAB CURSOR"),FLinearColor(.77f,.87f,.91f),28,78,nullptr,0.9f);
  if(const ANyCharacter* P=Cast<ANyCharacter>(GetOwningPawn())){
-  const FString Info=FString::Printf(TEXT("WOOD  %d     STONE  %d     ECHO  %d     BERRIES  %d"),P->Wood,P->Stone,P->Echo,P->Berries);
+  const FString Info=FString::Printf(TEXT("WOOD %d   STONE %d   ECHO %d   BERRIES %d   WATER %d"),
+   P->Wood,P->Stone,P->Echo,P->Berries,P->CountItem(ENyItemId::Water));
   FString Slots=FString::Printf(TEXT("INVENTORY %d / %d  |  AXE %d  |  PICKAXE %d"),P->Inventory.Num(),P->MaxSlots,P->CountItem(ENyItemId::Axe),P->CountItem(ENyItemId::Pickaxe));
   DrawText(Slots,FLinearColor(.8f,.9f,1.f),28,Y-133);
   if(P->bInventoryOpen){
@@ -32,7 +33,7 @@ void ANyHUD::DrawHUD(){
     }
    }
    DrawText(TEXT("RECIPES   [3] AXE: 3 WOOD + 2 STONE    [4] PICKAXE: 2 WOOD + 4 STONE"),FLinearColor(.75f,.86f,.88f),Left-14,Top+4*(Cell+Gap)+7,nullptr,.77f);
-   DrawText(TEXT("I - CLOSE  |  E - HARVEST  |  F - EAT BERRIES"),FLinearColor(.55f,.7f,.74f),Left,Top+4*(Cell+Gap)+30,nullptr,.75f);
+   DrawText(TEXT("I CLOSE  |  E GATHER  |  F EAT  |  Q DRINK WATER"),FLinearColor(.55f,.7f,.74f),Left,Top+4*(Cell+Gap)+30,nullptr,.75f);
   }
 
   DrawText(FString::Printf(TEXT("PVP MELEE 20 DMG  |  DEATHS %d  |  %s"),P->DeathCount,P->bIsDead?TEXT("DEAD - RESPAWN IN 8 SEC"):TEXT("ALIVE")),P->bIsDead?FLinearColor::Red:FLinearColor::White,28,Y-170);
