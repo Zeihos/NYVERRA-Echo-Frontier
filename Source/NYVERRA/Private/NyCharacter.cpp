@@ -16,6 +16,7 @@
 #include "TimerManager.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerStart.h"
+#include "GameFramework/PlayerState.h"
 #include "EngineUtils.h"
 ANyCharacter::ANyCharacter(){
  bReplicates=true;PrimaryActorTick.bCanEverTick=true;
@@ -43,6 +44,7 @@ void ANyCharacter::SetupPlayerInputComponent(UInputComponent* Input){
  Input->BindAction(TEXT("Interact"),IE_Pressed,this,&ANyCharacter::Interact);
  Input->BindAction(TEXT("BuildFoundation"),IE_Pressed,this,&ANyCharacter::PlaceFoundation);
  Input->BindAction(TEXT("BuildWall"),IE_Pressed,this,&ANyCharacter::PlaceWall);
+ Input->BindAction(TEXT("RepairPiece"),IE_Pressed,this,&ANyCharacter::RepairPiece);
  Input->BindAction(TEXT("EatBerries"),IE_Pressed,this,&ANyCharacter::EatBerries);
  Input->BindAction(TEXT("DrinkWater"),IE_Pressed,this,&ANyCharacter::DrinkWater);
  Input->BindAction(TEXT("CraftAxe"),IE_Pressed,this,&ANyCharacter::CraftAxe);
@@ -118,6 +120,13 @@ void ANyCharacter::ServerMeleeAttack_Implementation(){
  if(ANyEnemy* Enemy=Cast<ANyEnemy>(Hit.GetActor())){
   if(!Enemy->bDead && FVector::DistSquared(GetActorLocation(),Enemy->GetActorLocation())<=FMath::Square(245.f))
    UGameplayStatics::ApplyDamage(Enemy,20.f,Controller,this,nullptr);
+  return;
+ }
+ // Damage only the FIRST actor struck by the authoritative melee trace.
+ // This prevents raiding through intact walls to damage players or other pieces.
+ if(ANyBuildPiece* Piece=Cast<ANyBuildPiece>(Hit.GetActor())){
+  if(FVector::DistSquared(GetActorLocation(),Piece->GetActorLocation())<=FMath::Square(420.f))
+   UGameplayStatics::ApplyDamage(Piece,35.f,Controller,this,nullptr);
   return;
  }
  ANyCharacter* Victim=Cast<ANyCharacter>(Hit.GetActor());
@@ -198,6 +207,7 @@ void ANyCharacter::RespawnAfterDeath(){
 }
 void ANyCharacter::PlaceFoundation(){if(!bInventoryOpen&&!bIsDead)ServerPlacePiece(0);}
 void ANyCharacter::PlaceWall(){if(!bInventoryOpen&&!bIsDead)ServerPlacePiece(1);}
+void ANyCharacter::RepairPiece(){if(!bInventoryOpen&&!bIsDead)ServerRepairPiece();}
 void ANyCharacter::EatBerries(){if(!bIsDead&&!bInventoryOpen)ServerEatBerries();}
 void ANyCharacter::DrinkWater(){if(!bIsDead&&!bInventoryOpen)ServerDrinkWater();}
 void ANyCharacter::CraftAxe(){if(!bInventoryOpen&&!bIsDead)ServerCraft(0);}
@@ -385,9 +395,39 @@ void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  if(ANyBuildPiece* Piece=GetWorld()->SpawnActor<ANyBuildPiece>(P,Rot)){
   // If the item transaction is rejected, remove the spawned piece.
   if (!SpendItems(ENyItemId::Wood,4,ENyItemId::Stone,2)) { Piece->Destroy(); return; }
-  Piece->Initialize(Type);
+  Piece->Initialize(Type,GetPlayerState());
   LastBuildTime = Now; // Only successful placements trigger the build cooldown.
  }
+}
+
+void ANyCharacter::ServerRepairPiece_Implementation(){
+ if(!HasAuthority()||bIsDead||Health<=0.f||!Controller)return;
+ const float Now=GetWorld()->GetTimeSeconds();
+ if(Now-LastRepairTime<0.65f)return;
+ // Only a server trace can select the piece; clients cannot specify an actor
+ // reference or a damage/repair amount in the request.
+ const FVector Eye=GetPawnViewLocation();
+ if(FVector::DistSquared(Eye,GetActorLocation())>FMath::Square(220.f))return;
+ FHitResult Hit;
+ FCollisionQueryParams Params(SCENE_QUERY_STAT(NyRepairTrace),false,this);
+ const FVector End=Eye+Controller->GetControlRotation().Vector()*350.f;
+ if(!GetWorld()->LineTraceSingleByChannel(Hit,Eye,End,ECC_Visibility,Params))return;
+ ANyBuildPiece* Piece=Cast<ANyBuildPiece>(Hit.GetActor());
+ if(!IsValid(Piece)||
+    FVector::DistSquared(GetActorLocation(),Piece->GetActorLocation())>FMath::Square(450.f)||
+    !Piece->CanRepair(GetPlayerState()))return;
+ // Repairs require exactly one wood and one stone. Check both BEFORE
+ // mutating inventory or durability; empty inventories cannot repair.
+ if(CountItem(ENyItemId::Wood)<1||CountItem(ENyItemId::Stone)<1)return;
+ if(!SpendItems(ENyItemId::Wood,1,ENyItemId::Stone,1))return;
+ if(!Piece->Repair(GetPlayerState(),75.f)){
+  // The server runs this atomically, but keep the resource transaction
+  // lossless if the piece unexpectedly becomes invalid.
+  AddItem(ENyItemId::Wood,1);
+  AddItem(ENyItemId::Stone,1);
+  return;
+ }
+ LastRepairTime=Now;
 }
 
 void ANyCharacter::ServerInteract_Implementation(){
