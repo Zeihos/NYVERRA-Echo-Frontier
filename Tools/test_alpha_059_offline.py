@@ -44,7 +44,7 @@ class TestLockedDoors(unittest.TestCase):
 
     def test_door_waits_until_exit_clear_before_closing(self):
         body=self.cpp.split("void ANyBuildPiece::TryCloseDoor(){")[1].split("float ANyBuildPiece::TakeDamage(")[0]
-        for token in ("!HasAuthority()","ECC_Pawn","OverlapAnyTestByObjectType",
+        for token in ("!HasAuthority()","ECC_Pawn","ECC_WorldDynamic","OverlapAnyTestByObjectType",
                       "if(bOccupied)","&ANyBuildPiece::TryCloseDoor,1.f,false",
                       "bDoorOpen=false","OnRep_DoorOpen();","ForceNetUpdate();"):
             self.assertIn(token,body)
