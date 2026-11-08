@@ -86,3 +86,19 @@ The script checks `main`, the exact remote, clean working tree and existing map 
 3. Review the result, save the level, and use `Tools/Sync-VisualPolish-ToGitHub.ps1 -WithImportedAssets` from PowerShell to push the PNG and generated `.uasset` files.
 
 **Important:** Gameplay source changes and import scripts are on GitHub now; the nine new PNGs, saved TestWorld and fully imported Unreal materials are NOT confirmed in the repository. High-quality foliage models, characters and enemies are still placeholders, and UE shader/Windows tests are pending.
+
+
+## Visual polish 0.56 — 8 November 2026
+
+**Current workflow:** Download `NYVERRA-Visual-Polish-0.56-READY.zip` from the conversation. Extract it into the root of your PRIVATE Git clone beside `NYVERRA.uproject`, then double-click `START_VISUAL_POLISH_056.bat`.
+
+The launcher:
+- pulls `main`, validates 9 1024px PNG textures against PNG CRC and SHA-256,
+- builds the current Unreal Engine 5.8 editor target,
+- creates **new PBR056 material assets** without overwriting old PBR055,
+- creates and saves **`TestWorld_Visual056.umap` as a separate level** while preserving original TestWorld,
+- offers an optional confirmed upload of texture PNGs, generated `.uasset` materials, and test maps to your PRIVATE GitHub repository.
+
+No force push, no automatic override of startup maps. See [VISUAL_POLISH_056_STATUS.md](VISUAL_POLISH_056_STATUS.md).
+
+**Limitations:** The archive's PNG binary assets are still local-only until uploaded on Windows; the Unreal shader compilation, gameplay rendering and server behavior have not been verified in this environment. 3D character models, foliage detail, animations, and release-quality graphics are not finished.
