@@ -26,7 +26,7 @@ class TestRaidingAndRepair(unittest.TestCase):
         self.assertIn("APlayerState* BuilderPlayerState", self.header)
         self.assertIn("void Initialize(uint8 NewType, APlayerState* InBuilder)", self.header)
         self.assertIn("Piece->Initialize(Type,GetPlayerState())", self.pawn)
-        self.assertIn("MaxDurability=NewType==0?600.f:360.f", self.build)
+        self.assertIn("MaxDurability=NewType==0?600.f:NewType==1?360.f:280.f", self.build)
 
     def test_damage_server_validated_and_bounded(self):
         damage = self.build.split("float ANyBuildPiece::TakeDamage(")[1].split(
