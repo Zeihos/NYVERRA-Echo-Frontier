@@ -24,7 +24,14 @@ void ANyResource::UpdateLook() {
  if(Kind==ENyResourceKind::Wood) SetActorScale3D(FVector(0.5f,0.5f,1.6f));
  else if(Kind==ENyResourceKind::Stone) SetActorScale3D(FVector(1.0f,0.85f,0.55f));
  else if(Kind==ENyResourceKind::Berries) SetActorScale3D(FVector(0.32f));
+ else if(Kind==ENyResourceKind::Water) SetActorScale3D(FVector(0.38f,0.38f,0.70f));
  else SetActorScale3D(FVector(0.45f));
+ // A short cylinder makes clean-water caches recognizable among resource
+ // spheres even when the optional art package has not been imported.
+ if(Kind==ENyResourceKind::Water){
+  if(UStaticMesh* Cylinder=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Cylinder.Cylinder")))
+   Mesh->SetStaticMesh(Cylinder);
+ }
  // Optional high-detail materials are loaded only after artists import
  // the VisualPolish assets. BasicShapes materials stay a safe fallback.
  if(Kind==ENyResourceKind::Stone || Kind==ENyResourceKind::Wood){
@@ -37,7 +44,9 @@ void ANyResource::UpdateLook() {
   }
  }
  if(UMaterialInstanceDynamic* Material=Mesh->CreateAndSetMaterialInstanceDynamic(0)) {
-  const FLinearColor Color=Kind==ENyResourceKind::Wood?FLinearColor(0.20f,0.34f,0.13f):Kind==ENyResourceKind::Stone?FLinearColor(0.22f,0.29f,0.31f):Kind==ENyResourceKind::Berries?FLinearColor(0.7f,0.04f,0.12f):FLinearColor(0.0f,0.75f,0.9f);
+  const FLinearColor Color=Kind==ENyResourceKind::Wood?FLinearColor(0.20f,0.34f,0.13f):Kind==ENyResourceKind::Stone?FLinearColor(0.22f,0.29f,0.31f):Kind==ENyResourceKind::Berries?FLinearColor(0.7f,0.04f,0.12f):
+   Kind==ENyResourceKind::Water?FLinearColor(0.09f,0.39f,0.86f):
+   FLinearColor(0.0f,0.75f,0.9f);
   Material->SetVectorParameterValue(TEXT("Color"),Color);
  }
 }
