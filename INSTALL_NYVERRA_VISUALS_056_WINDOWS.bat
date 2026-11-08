@@ -68,7 +68,7 @@ if not exist "%MAP%" (
  echo [LOG] "%LOG%"
  exit /b 11
 )
-if not exist "%ASSETS%\Materials\M_NyLandscape_PBR055.uasset" (
+if not exist "%ASSETS%\Materials\M_NyLandscape_PBR056.uasset" (
  echo [ERROR] Unreal PBR Landscape material missing. See "%LOG%"
  exit /b 12
 )
@@ -78,7 +78,7 @@ if not exist "%ASSETS%\Textures\T_NyGrass_Albedo.uasset" (
 )
 echo [5/5] Completed. Your authored TestWorld was preserved.
 echo [SUCCESS] New level: Content\Maps\TestWorld_Visual056.umap
-echo [SUCCESS] Material: Content\NYVERRA\VisualPolish\Materials\M_NyLandscape_PBR055.uasset
+echo [SUCCESS] Material: Content\NYVERRA\VisualPolish\Materials\M_NyLandscape_PBR056.uasset
 echo [NOTE] You must open the visual map in Unreal Editor and inspect appearance,
 echo [NOTE] lighting, shader compilation, NavMesh, gameplay and frame rate.
 echo.
