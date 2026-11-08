@@ -3,6 +3,7 @@
 #include "Components/SceneComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInterface.h"
+#include "UObject/UObjectGlobals.h"
 
 ANyFoliageCluster::ANyFoliageCluster()
 {
