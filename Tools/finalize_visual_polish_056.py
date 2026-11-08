@@ -30,7 +30,7 @@ def main():
 
     # Asset imports are idempotent and must run even if the visual map already
     # exists (e.g. after an interrupted first import).
-    runpy.run_path(str(TOOLS / "import_visual_polish_055.py"), run_name="__main__")
+    runpy.run_path(str(TOOLS / "import_visual_polish_056.py"), run_name="__main__")
 
     if E.does_asset_exist(VISUAL_MAP):
         unreal.log_warning("[NYVERRA VISUAL] Existing TestWorld_Visual056 preserved. No level changes.")
@@ -54,7 +54,7 @@ def main():
     if not E.does_asset_exist(VISUAL_MAP):
         raise RuntimeError("New visual test level not visible to AssetRegistry")
 
-    runpy.run_path(str(TOOLS / "apply_visual_polish_055.py"), run_name="__main__")
+    runpy.run_path(str(TOOLS / "apply_visual_polish_056.py"), run_name="__main__")
 
     if not LEVELS.save_current_level():
         raise RuntimeError("Could not save visual level (original TestWorld is still preserved)")
