@@ -44,6 +44,7 @@ void ANyCharacter::SetupPlayerInputComponent(UInputComponent* Input){
  Input->BindAction(TEXT("BuildFoundation"),IE_Pressed,this,&ANyCharacter::PlaceFoundation);
  Input->BindAction(TEXT("BuildWall"),IE_Pressed,this,&ANyCharacter::PlaceWall);
  Input->BindAction(TEXT("EatBerries"),IE_Pressed,this,&ANyCharacter::EatBerries);
+ Input->BindAction(TEXT("DrinkWater"),IE_Pressed,this,&ANyCharacter::DrinkWater);
  Input->BindAction(TEXT("CraftAxe"),IE_Pressed,this,&ANyCharacter::CraftAxe);
  Input->BindAction(TEXT("CraftPickaxe"),IE_Pressed,this,&ANyCharacter::CraftPickaxe);
  Input->BindAction(TEXT("ToggleMouse"),IE_Pressed,this,&ANyCharacter::ToggleMouse);
@@ -75,6 +76,7 @@ FString ANyCharacter::GetItemName(ENyItemId Item){
  case ENyItemId::Stone: return TEXT("STONE");
  case ENyItemId::EchoShard: return TEXT("ECHO SHARD");
  case ENyItemId::Berries: return TEXT("BERRIES");
+ case ENyItemId::Water: return TEXT("CLEAN WATER");
  case ENyItemId::Axe: return TEXT("STONE AXE");
  case ENyItemId::Pickaxe: return TEXT("STONE PICKAXE");
  default: return TEXT("UNKNOWN");
@@ -194,7 +196,8 @@ void ANyCharacter::RespawnAfterDeath(){
 }
 void ANyCharacter::PlaceFoundation(){ServerPlacePiece(0);}
 void ANyCharacter::PlaceWall(){ServerPlacePiece(1);}
-void ANyCharacter::EatBerries(){ServerEatBerries();}
+void ANyCharacter::EatBerries(){if(!bIsDead&&!bInventoryOpen)ServerEatBerries();}
+void ANyCharacter::DrinkWater(){if(!bIsDead&&!bInventoryOpen)ServerDrinkWater();}
 void ANyCharacter::CraftAxe(){ServerCraft(0);}
 void ANyCharacter::CraftPickaxe(){ServerCraft(1);}
 bool ANyCharacter::GiveLoot(ENyItemId Item,int32 Quantity){return HasAuthority()&&AddItem(Item,Quantity);}
@@ -277,6 +280,16 @@ void ANyCharacter::ServerEatBerries_Implementation(){
  if(Health<=0.f||bIsDead)return;
  if(!HasAuthority()||CountItem(ENyItemId::Berries)<=0||Hunger>=100.f)return;
  if(SpendItems(ENyItemId::Berries,1,ENyItemId::Wood,0))Hunger=FMath::Min(100.f,Hunger+18.f);
+}
+// Water is consumed only from the server-owned inventory: no client-provided
+// quantity/target, no refill while dead, and no free rehydration at full thirst.
+void ANyCharacter::ServerDrinkWater_Implementation(){
+ if(!HasAuthority()||bIsDead||Health<=0.f||Thirst>=100.f)return;
+ if(CountItem(ENyItemId::Water)<1)return;
+ if(SpendItems(ENyItemId::Water,1,ENyItemId::Wood,0)){
+  Thirst=FMath::Min(100.f,Thirst+35.f);
+  ForceNetUpdate();
+ }
 }
 void ANyCharacter::Tick(float DT){
  Super::Tick(DT);if(!HasAuthority()||bIsDead)return;
@@ -394,7 +407,8 @@ void ANyCharacter::ServerInteract_Implementation(){
  const ENyResourceKind Kind=Resource->Kind;
  const ENyItemId Item=Kind==ENyResourceKind::Wood?ENyItemId::Wood:
   Kind==ENyResourceKind::Stone?ENyItemId::Stone:
-  Kind==ENyResourceKind::Berries?ENyItemId::Berries:ENyItemId::EchoShard;
+  Kind==ENyResourceKind::Berries?ENyItemId::Berries:
+  Kind==ENyResourceKind::Water?ENyItemId::Water:ENyItemId::EchoShard;
  const int32 Award=(Item==ENyItemId::Wood&&CountItem(ENyItemId::Axe)>0)||
    (Item==ENyItemId::Stone&&CountItem(ENyItemId::Pickaxe)>0)?2:1;
  // Harvest the authoritative node first, then credit the exact returned amount.
