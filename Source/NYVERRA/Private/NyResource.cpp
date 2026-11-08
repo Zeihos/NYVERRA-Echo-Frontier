@@ -4,6 +4,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
+#include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
 ANyResource::ANyResource() {
  bReplicates = true;
