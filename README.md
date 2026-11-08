@@ -2,7 +2,7 @@
 
 Private Unreal Engine 5.8 C++ multiplayer survival prototype (Windows; PvP/PvE, building, crafting).
 
-**Latest sources: Alpha 0.58 (prototype) + Unreal Engine 5.8 compilation fixes.** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
+**Latest sources: Alpha 0.59 (prototype) + Unreal Engine 5.8 compilation fixes.** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
 
 ## First playable test map
 
@@ -125,3 +125,12 @@ The multiplayer construction prototype now has server-owned durability and raids
 After `git pull origin main`, run `TEST_ALPHA_058_WINDOWS.bat` on a Windows computer with Unreal Engine 5.8 to execute offline checks and build `NYVERRAEditor`. Then follow [ALPHA_058_QA.md](ALPHA_058_QA.md) for the **two-player** manual raid/repair tests. The current GitHub source edits have not yet been independently compiled or tested in Unreal Engine.
 
 **Still absent:** permanent account/ownership persistence, raid explosives, doors, raid loot, full multiplayer server QA, finished realistic assets and a packaged game. The tested `TestWorld.umap` and PBR source textures also need to be synchronized from Windows.
+
+
+## Alpha 0.59 — locked building doors
+
+Building type 2 adds an **owner-only locked door** with 280 HP and its own cost of **6 wood + 4 stone**. Place it against an existing foundation with **5**, press **E** to open it. Opening replicates to clients; after eight seconds the server automatically closes the prototype slab, but waits while another pawn or moving obstacle occupies the doorway. The door cannot be created on bare terrain, and can be destroyed using the existing server-authoritative melee raid system. Only the original builder may open or repair it.
+
+This is a **functional source prototype**, not an animated finished door model. Current ownership uses the active `PlayerState`, not a durable account ID. Door permissions therefore do not survive server shutdown or account reconnect; full base persistence and group keys are future work.
+
+After `git pull origin main`, run `TEST_ALPHA_059_WINDOWS.bat` to run offline checks and attempt an **actual UE5.8 C++ editor build**. Follow [ALPHA_059_QA.md](ALPHA_059_QA.md) for required 2-player PIE verification. None of the 0.59 gameplay changes has been verified inside Unreal Editor yet.
