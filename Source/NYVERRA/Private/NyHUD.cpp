@@ -37,7 +37,22 @@ void ANyHUD::DrawHUD(){
 
   DrawText(FString::Printf(TEXT("PVP MELEE 20 DMG  |  DEATHS %d  |  %s"),P->DeathCount,P->bIsDead?TEXT("DEAD - RESPAWN IN 8 SEC"):TEXT("ALIVE")),P->bIsDead?FLinearColor::Red:FLinearColor::White,28,Y-170);
   DrawText(Info,FLinearColor(0.8f,0.98f,0.95f),28,Y-64,nullptr,1.25f);
-  DrawText(FString::Printf(TEXT("HP  %.0f    HUNGER  %.0f    THIRST  %.0f    STAMINA  %.0f"),P->Health,P->Hunger,P->Thirst,P->Stamina),FLinearColor::White,28,Y-99);
+  // Responsive, low-cost Canvas status bars in place of an unreadable number row.
+  // These bars do not rely on imported textures or UMG assets.
+  const float VitalBarW=146.f;
+  const float VitalGap=20.f;
+  auto DrawVital=[&](const TCHAR* Label,float Value,const FLinearColor& Color,int32 Index){
+   const float SX=28.f+Index*(VitalBarW+VitalGap);
+   const float SY=Y-112.f;
+   const float Level=FMath::Clamp(Value/100.f,0.f,1.f);
+   DrawText(FString::Printf(TEXT("%s  %.0f"),Label,Value),FLinearColor(.84f,.9f,.94f),SX,SY,nullptr,.92f);
+   DrawRect(FLinearColor(.055f,.08f,.105f,.94f),SX,SY+25.f,VitalBarW,9.f);
+   DrawRect(Color,SX+1.f,SY+26.f,FMath::Max(0.f,(VitalBarW-2.f)*Level),7.f);
+  };
+  DrawVital(TEXT("HEALTH"),P->Health,FLinearColor(.93f,.28f,.32f),0);
+  DrawVital(TEXT("HUNGER"),P->Hunger,FLinearColor(.91f,.64f,.23f),1);
+  DrawVital(TEXT("THIRST"),P->Thirst,FLinearColor(.29f,.72f,.94f),2);
+  DrawVital(TEXT("STAMINA"),P->Stamina,FLinearColor(.34f,.85f,.67f),3);
  }
  if(const ANyWorldState* State=GetWorld()?GetWorld()->GetGameState<ANyWorldState>():nullptr){
   DrawText(FString::Printf(TEXT("TIME %02d:%02d  |  WEATHER %s  (%ds)"),FMath::FloorToInt(State->TimeOfDayHours),FMath::FloorToInt(FMath::Frac(State->TimeOfDayHours)*60.f),State->bRainActive?TEXT("RAIN / FOG"):TEXT("CLEAR"),State->WeatherSeconds),FLinearColor(.7f,.85f,1.f),28,150);
