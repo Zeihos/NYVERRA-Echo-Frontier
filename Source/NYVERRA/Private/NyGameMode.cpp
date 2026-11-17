@@ -5,6 +5,12 @@
 #include "NyEnemy.h"
 #include "NyHUD.h"
 #include "NyWorldState.h"
+#include "NyBuildPiece.h"
+#include "NyBaseSaveGame.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerState.h"
+#include "GameFramework/PlayerController.h"
+#include "TimerManager.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerStart.h"
 #include "GameFramework/Pawn.h"
@@ -69,7 +75,13 @@ void ANyGameMode::BeginPlay(){
    if(!Nav->GetDefaultNavDataInstance(FNavigationSystem::DontCreate))
     UE_LOG(LogTemp,Warning,TEXT("[NYVERRA 0.16] No NavData: create a saved test map and add NavMeshBoundsVolume before testing PvE AI."));
   }
-  SpawnServerResources(); SpawnSiteResources(); SpawnSiteLoot(); SpawnEnemies(); }
+  SpawnServerResources(); SpawnSiteResources(); SpawnSiteLoot(); SpawnEnemies();
+  // Restore existing bases only on non-PIE authoritative worlds.
+  LoadBases();
+  if(ShouldPersistBases()&&!bBaseSaveReadOnly)
+   GetWorldTimerManager().SetTimer(BaseAutosaveTimer,this,
+    &ANyGameMode::SaveBases,60.f,true);
+ }
 }
 void ANyGameMode::SpawnServerResources(){
  UWorld* W=GetWorld();if(!W)return;
@@ -148,4 +160,146 @@ void ANyGameMode::SpawnEnemies(){
   GetWorld()->SpawnActor<ANyEnemy>(ANyEnemy::StaticClass(),NyServerGround(GetWorld(),P,P.Z),FRotator::ZeroRotator,Params);
  }
  UE_LOG(LogTemp,Display,TEXT("[NYVERRA Alpha 0.12] %d prototype PvE enemies spawned"),UE_ARRAY_COUNT(Positions));
+}
+
+
+// Alpha 0.60 world persistence. UGameplayStatics writes to Saved/SaveGames.
+// Never share these server-side files with clients, and back them up separately.
+bool ANyGameMode::ShouldPersistBases() const{
+ const UWorld* W=GetWorld();
+ if(!HasAuthority()||!W||W->GetNetMode()==NM_Client)return false;
+#if WITH_EDITOR
+ // PIE uses multiple worlds and ephemeral player identities. Disable
+ // disk persistence there to prevent tests from overwriting real world data.
+ if(W->WorldType==EWorldType::PIE)return false;
+#endif
+ return true;
+}
+
+FString ANyGameMode::BaseSlotName() const{
+ const FString Map=UGameplayStatics::GetCurrentLevelName(this,true);
+ return Map.IsEmpty()?FString():TEXT("NYVERRA_Bases_v1_")+Map;
+}
+
+void ANyGameMode::RequestBaseSave(){
+ if(!ShouldPersistBases()||bLoadingBases||bBaseSaveReadOnly)return;
+ // Coalesce consecutive attacks and repairs, reducing disk activity.
+ if(!GetWorldTimerManager().IsTimerActive(BaseDirtySaveTimer))
+  GetWorldTimerManager().SetTimer(BaseDirtySaveTimer,this,
+   &ANyGameMode::SaveBases,3.f,false);
+}
+
+void ANyGameMode::SaveBases(){
+ if(!ShouldPersistBases()||bLoadingBases||bBaseSaveReadOnly)return;
+ const FString Slot=BaseSlotName();
+ if(Slot.IsEmpty())return;
+ UWorld* W=GetWorld();
+ if(!W)return;
+ UNyBaseSaveGame* Save=Cast<UNyBaseSaveGame>(
+  UGameplayStatics::CreateSaveGameObject(UNyBaseSaveGame::StaticClass()));
+ if(!Save)return;
+ Save->FormatVersion=1;
+ Save->MapName=UGameplayStatics::GetCurrentLevelName(this,true);
+ TSet<FGuid> Seen;
+ for(TActorIterator<ANyBuildPiece> It(W);It;++It){
+  ANyBuildPiece* Piece=*It;
+  if(!IsValid(Piece)||Piece->Durability<=0.f)continue;
+  if(!Piece->PersistentId.IsValid()){
+   UE_LOG(LogTemp,Warning,TEXT("[NYVERRA BaseSave] Ignoring building with no persistent GUID"));
+   continue;
+  }
+  if(Seen.Contains(Piece->PersistentId)) {
+   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Duplicate GUID; refusing to overwrite save"));
+   return;
+  }
+  Seen.Add(Piece->PersistentId);
+  if(Save->Pieces.Num()>=1024){
+   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] 1024-piece cap exceeded; save untouched"));
+   return;
+  }
+  FNySavedBuildPiece& Entry=Save->Pieces.AddDefaulted_GetRef();
+  Entry.PersistentId=Piece->PersistentId;
+  Entry.PieceType=Piece->PieceType;
+  Entry.Location=Piece->GetActorLocation();
+  Entry.Rotation=Piece->GetActorRotation();
+  Entry.Durability=Piece->Durability;
+  Entry.OwnerNetworkId=Piece->BuilderNetworkId;
+ }
+ if(!UGameplayStatics::SaveGameToSlot(Save,Slot,0))
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] FAILED writing %s; check disk permissions"),*Slot);
+ else
+  UE_LOG(LogTemp,Display,TEXT("[NYVERRA BaseSave] Saved %d pieces to %s"),Save->Pieces.Num(),*Slot);
+}
+
+void ANyGameMode::LoadBases(){
+ if(!ShouldPersistBases())return;
+ const FString Slot=BaseSlotName();
+ if(Slot.IsEmpty()||!UGameplayStatics::DoesSaveGameExist(Slot,0))return;
+ UNyBaseSaveGame* Save=Cast<UNyBaseSaveGame>(
+  UGameplayStatics::LoadGameFromSlot(Slot,0));
+ const FString CurrentMap=UGameplayStatics::GetCurrentLevelName(this,true);
+ if(!Save||Save->FormatVersion!=1||Save->MapName!=CurrentMap||
+    Save->Pieces.Num()>1024){
+  bBaseSaveReadOnly=true; // Protect unknown, incompatible or damaged saves.
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Invalid save; read-only until admin backup/repair"));
+  return;
+ }
+ // Validate the complete input BEFORE spawning any actors. A malformed save
+ // must never erase, duplicate or partially replace the world.
+ TSet<FGuid> Seen;
+ for(const FNySavedBuildPiece& E:Save->Pieces){
+  const float ExpectedHP=E.PieceType==0?600.f:E.PieceType==1?360.f:280.f;
+  const bool bBad=E.PieceType>2||!E.PersistentId.IsValid()||
+   E.Location.ContainsNaN()||E.Rotation.ContainsNaN()||
+   FMath::Abs(E.Location.X)>5000.f||FMath::Abs(E.Location.Y)>5000.f||
+   FMath::Abs(E.Location.Z)>10000.f||!FMath::IsFinite(E.Durability)||
+   E.Durability<=0.f||E.Durability>ExpectedHP||
+   E.OwnerNetworkId.Len()>256||Seen.Contains(E.PersistentId);
+  if(bBad){
+   bBaseSaveReadOnly=true;
+   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Invalid building record; no actors loaded"));
+   return;
+  }
+  Seen.Add(E.PersistentId);
+ }
+ bLoadingBases=true;
+ int32 Restored=0;
+ for(const FNySavedBuildPiece& E:Save->Pieces){
+  FActorSpawnParameters Params;
+  Params.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+  ANyBuildPiece* Piece=GetWorld()->SpawnActor<ANyBuildPiece>(
+   ANyBuildPiece::StaticClass(),E.Location,E.Rotation,Params);
+  if(!Piece){
+   bBaseSaveReadOnly=true; // Never overwrite a save after a partial load.
+   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Could not spawn saved building; slot read-only"));
+   break;
+  }
+  Piece->RestoreFromSave(E.PieceType,E.PersistentId,E.Durability,E.OwnerNetworkId);
+  ++Restored;
+ }
+ bLoadingBases=false;
+ UE_LOG(LogTemp,Display,TEXT("[NYVERRA BaseSave] Loaded %d / %d pieces from %s"),
+  Restored,Save->Pieces.Num(),*Slot);
+}
+
+void ANyGameMode::BindPlayerToSavedBases(APlayerState* Player){
+ if(!HasAuthority()||!IsValid(Player))return;
+ // For online identities only. No name-based recovery or unverified RPC
+ // is allowed to take over someone else's locked door.
+ for(TActorIterator<ANyBuildPiece> It(GetWorld());It;++It)
+  if(IsValid(*It))It->BindReturningOwner(Player);
+}
+
+void ANyGameMode::PostLogin(APlayerController* NewPlayer){
+ Super::PostLogin(NewPlayer);
+ if(NewPlayer)BindPlayerToSavedBases(NewPlayer->GetPlayerState<APlayerState>());
+}
+
+void ANyGameMode::Logout(AController* Exiting){
+ APlayerState* Departing=Exiting?Exiting->GetPlayerState<APlayerState>():nullptr;
+ if(HasAuthority()&&IsValid(Departing)){
+  for(TActorIterator<ANyBuildPiece> It(GetWorld());It;++It)
+   if(IsValid(*It))It->UnbindDepartingOwner(Departing);
+ }
+ Super::Logout(Exiting);
 }
