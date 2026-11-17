@@ -143,6 +143,9 @@ float ANyBuildPiece::TakeDamage(float DamageAmount,const FDamageEvent& DamageEve
                                AController* EventInstigator,AActor* DamageCauser){
  if(!HasAuthority()||Durability<=0.f||!FMath::IsFinite(DamageAmount)||DamageAmount<=0.f)
   return 0.f;
+ if(const ANyGameMode* Mode=GetWorld()->GetAuthGameMode<ANyGameMode>()){
+  if(!Mode->CanMutateBaseWorld())return 0.f;
+ }
  // Only a living server-controlled player may damage structures in this
  // initial melee raid loop. Clients cannot set Durability or bypass cover.
  const ANyCharacter* Raider=Cast<ANyCharacter>(DamageCauser);
@@ -165,6 +168,9 @@ float ANyBuildPiece::TakeDamage(float DamageAmount,const FDamageEvent& DamageEve
 bool ANyBuildPiece::CanRepair(const APlayerState* Requester) const{
  if(!HasAuthority()||!IsBuildOwner(Requester)||
     Durability<=0.f||Durability>=MaxDurability||!GetWorld())return false;
+ if(const ANyGameMode* Mode=GetWorld()->GetAuthGameMode<ANyGameMode>()){
+  if(!Mode->CanMutateBaseWorld())return false;
+ }
  return GetWorld()->GetTimeSeconds()-LastDamageTime>=12.f;
 }
 
