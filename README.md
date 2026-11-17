@@ -1,160 +1,99 @@
 # NYVERRA: Echo Frontier
 
-Private Unreal Engine 5.8 C++ multiplayer survival prototype (Windows; PvP/PvE, building, crafting).
+**Многопользовательский survival-проект на Unreal Engine 5.8**
 
-**Latest sources: Alpha 0.61 (prototype) + Unreal Engine 5.8 compilation fixes.** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
+[![Проверки исходников](https://github.com/Zeihos/NYVERRA-Echo-Frontier/actions/workflows/nyverra-offline.yml/badge.svg)](https://github.com/Zeihos/NYVERRA-Echo-Frontier/actions/workflows/nyverra-offline.yml)
+![Версия](https://img.shields.io/badge/версия-Alpha%200.61-64748b)
+![Платформа](https://img.shields.io/badge/платформа-Windows-2563eb)
+![Движок](https://img.shields.io/badge/движок-Unreal%20Engine%205.8-111827)
 
-## First playable test map
+NYVERRA: Echo Frontier — разрабатываемая PvPvE-игра с добычей ресурсов, выживанием, исследованием мира и строительством баз. Проект написан на **C++ с Unreal Engine**, ориентирован на Windows и сетевую игру.
 
-On Windows with UE 5.8 and Visual Studio C++ tools:
+> **Статус:** ранний прототип, не релиз. Последние версии исходников **не прошли подтверждённую компиляцию и полноценный игровой тест в UE5.8**. GitHub Actions проверяет Python-скрипты и структуру исходников, но не собирает Unreal Engine.
 
-1. Close Unreal Editor and run `BUILD_AND_PREPARE_ALPHA_053_WINDOWS.bat` next to `NYVERRA.uproject`.
-2. If Unreal is installed elsewhere, pass the engine directory as argument, e.g. `BUILD_AND_PREPARE_ALPHA_053_WINDOWS.bat "D:\UE_5.8"`.
-3. The script builds `NYVERRAEditor`, generates a saved `Content/Maps/TestWorld.umap` only if missing, and selects it as the Game/Editor/Server default map.
-4. Open `NYVERRA.uproject`, build navigation paths and save `TestWorld` in Unreal Editor.
-5. Run 2 players in PIE (Play As Listen Server) and record errors for the next development pass.
+## Что есть в проекте
 
-See `FIRST_PLAY_ALPHA_053_RU.txt` for more details. Failure logs: `BUILD_ALPHA_051.log`, `BUILD_ALPHA_051_ERRORS.txt`, `BUILD_ALPHA_053_MAP.log`.
+| Система | Текущее состояние |
+| --- | --- |
+| Персонаж, передвижение, взаимодействия | Базовый прототип |
+| Голод, жажда, здоровье и выносливость | Базовая логика |
+| Ресурсы, инвентарь, крафт и добыча | Прототип |
+| Противники, рукопашный бой, PvP | Прототип |
+| Фундаменты, стены, двери, ремонт и рейды | Прототип серверной логики |
+| Сохранение построек | Alpha 0.61: серверные A/B-снимки |
+| Локации, материалы, HUD | В разработке; часть моделей и материалов — заглушки |
+| Полноценный сервер, аккаунты, вайпы, финальная графика | Не готовы |
 
-**November 2026 first-play QA and handoff:** see [`QA_FIRST_PLAY_UE58_2026-11-07.md`](QA_FIRST_PLAY_UE58_2026-11-07.md). A local `TestWorld` was tested in PIE, but `Content/Maps/TestWorld.umap` is **not committed** yet; current repository startup settings still reference `/Engine/Maps/Entry`. The tester's local project was not a Git checkout, so local assets are not synchronized automatically.
+Более точное состояние и ограничения — в [docs/STATUS.md](docs/STATUS.md).
 
-## Source structure
+## Быстрый старт (Windows)
 
-- `Source/NYVERRA/` — game code for survival, AI, building, loot and replication.
-- `Config/` — project settings and input.
-- `Content/TerrainSource/` — terrain source art, not an authored `.umap` map.
-- `Tools/` — offline generators, Unreal Editor Python scripts and tests.
-- `Documentation/` — game design and technical specification (if included in your checkout).
-- `History/Early_2D_Prototype/` — legacy historical prototype, not the current game.
-
-### Earlier Alpha archives
-
-The 52 historical Alpha ZIPs were **not uploaded** in the first GitHub commit. They are available in the separately supplied history archive parts. To preserve every binary archive in GitHub, upload `History/UE5_Alpha_Archives/` from the complete local package. Do not assume that the history folder already exists in this repository.
-
-## Offline checks
-
-`py -3 Tools/test_alpha_053_offline.py` — uses mock Unreal APIs to test map creation, re-run safety, INI update failure handling and two C++ source invariants. These tests are **not** an Unreal Engine compile or playtest.
-
-
-## Core gameplay polish (8 November 2026)
-
-The existing survival prototype was audited and the following **source-code fixes** are on `main`:
-
-- Resources no longer get permanently destroyed on depletion: zero remaining hides and disables collision; after 120 s on the server they replenish and replicate the state.
-- Empty shared loot crates also stop blocking collision until they refill.
-- Mining with an axe/pickaxe can collect the final unit from a nearly empty node.
-- Four initial PvE enemy actors now recover after 90 s, restoring health, navigation movement, visibility and collision across server/clients.
-- Authored sun and fog actors are reused instead of unconditionally spawning duplicate lights.
-- Respawn chooses a PlayerStart farthest from living players (best of the available starts).
-- Walls can attach to the nearest side of a foundation and use corner-safe mesh extents.
-- HUD controls were split into two readable lines; inventory no longer shows a combat crosshair.
-
-These code changes have **not** been compiled or playtested in Unreal Editor after the changes. Offline tests check code structure, not runtime behavior.
-
-### Windows checks
+**Потребуется:** Unreal Engine **5.8**, Visual Studio с поддержкой Unreal/C++, Git и Python 3.
 
 ```bat
-git pull origin main
-py -3 -m unittest discover -s Tools -p "test_alpha_*.py" -v
+git clone https://github.com/Zeihos/NYVERRA-Echo-Frontier.git
+cd NYVERRA-Echo-Frontier
+TEST_ALPHA_061_WINDOWS.bat
 ```
 
-GitHub Actions runs the same offline checks on push. A green offline workflow is **not** evidence of a working Unreal build.
+Если Unreal Engine расположен не в папке по умолчанию:
 
-### Authored TestWorld still needs upload
-
-The tested `Content/Maps/TestWorld.umap` currently exists only on the tester's Windows machine, not this repository.
-
-From a clean local clone, use:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Sync-TestWorld-ToGitHub.ps1 -MapFile "C:\PATH\TO\TESTED\PROJECT\Content\Maps\TestWorld.umap"
+```bat
+TEST_ALPHA_061_WINDOWS.bat "D:\Epic Games\UE_5.8"
 ```
 
-The script checks `main`, the exact remote, clean working tree and existing map hashes. It refuses to overwrite an unrelated map, updates all three default-map keys and pushes the authored `.umap`. Custom `.uasset` dependencies, if any, must be synced separately.
+Скрипт выполняет офлайн-тесты и **пытается** собрать `NYVERRAEditor`. После успешной компиляции открой `NYVERRA.uproject` в Unreal Editor.
 
-**Still unverified:** Windows C++ build after this polish pass; actual saved-map compatibility; two-player PIE networking; AI navigation after respawn; building four walls on a foundation; dedicated-server build; packaged game; release-quality visuals. The 52 historical Alpha ZIP archives are also still missing from GitHub.
+**Важно:** проверенный файл карты `Content/Maps/TestWorld.umap` пока не загружен в репозиторий. При необходимости можно создать локальную тестовую карту командой `BUILD_AND_PREPARE_ALPHA_053_WINDOWS.bat`, но это не заменяет оригинальный проверенный уровень.
 
+Подробная инструкция: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-## Visual polish 0.55 — 8 November 2026
+## Управление прототипом
 
-**Code committed:** new versioned PBR import/assign tools, optional material hookups for existing 3D scenery, and color-coded HUD stat bars. Details: [VISUAL_POLISH_055_STATUS.md](VISUAL_POLISH_055_STATUS.md).
+| Клавиша | Действие |
+| --- | --- |
+| WASD / мышь | Перемещение / обзор |
+| Shift / Space | Бег / прыжок |
+| ЛКМ | Атака |
+| E | Сбор ресурсов, взаимодействие, открытие своей двери |
+| I | Инвентарь |
+| F / Q | Съесть ягоды / выпить воду |
+| 1 / 2 / 5 | Фундамент / стена / дверь |
+| 3 / 4 | Крафт топора / кирки |
+| R | Ремонт собственной постройки |
+| Tab | Переключение курсора |
 
-**External PNG package not committed yet:** download the NYVERRA 0.55 visual pack from the ChatGPT conversation, extract into your PRIVATE Git clone beside `NYVERRA.uproject`, then open Unreal Editor and run:
+Набор клавиш описывает **реализованные привязки**. Корректность всех действий в сетевой игре требует тестирования.
 
-1. `Tools/import_visual_polish_055.py` to create `/Game/NYVERRA/VisualPolish/Textures` and `Materials`.
-2. `Tools/apply_visual_polish_055.py` to assign material to recognized floor/landscape surfaces in the active map (no automatic level save).
-3. Review the result, save the level, and use `Tools/Sync-VisualPolish-ToGitHub.ps1 -WithImportedAssets` from PowerShell to push the PNG and generated `.uasset` files.
+## Структура репозитория
 
-**Important:** Gameplay source changes and import scripts are on GitHub now; the nine new PNGs, saved TestWorld and fully imported Unreal materials are NOT confirmed in the repository. High-quality foliage models, characters and enemies are still placeholders, and UE shader/Windows tests are pending.
+```text
+NYVERRA-Echo-Frontier/
+├── Source/NYVERRA/     # C++-код игры и сетевых систем
+├── Config/             # Настройки Unreal, клавиши
+├── Content/            # Доступные игровые и исходные ассеты
+├── Tools/              # Генераторы карты, материалы, тесты, утилиты
+├── Documentation/      # GDD и технические материалы
+├── History/            # Ранние прототипы (не текущая версия игры)
+├── docs/               # Актуальная документация
+├── .github/            # GitHub Actions и шаблоны
+└── NYVERRA.uproject
+```
 
+Старые скрипты с номерами Alpha сохранены ради обратной совместимости. **Новые изменения вносить в актуальную версию, а не в `History/`.**
 
-## Visual polish 0.56 — 8 November 2026
+## Документация
 
-**Current workflow:** Download `NYVERRA-Visual-Polish-0.56-READY.zip` from the conversation. Extract it into the root of your PRIVATE Git clone beside `NYVERRA.uproject`, then double-click `START_VISUAL_POLISH_056.bat`.
+- [Текущее состояние и известные ограничения](docs/STATUS.md)
+- [Сборка, тестирование и работа с исходниками](docs/DEVELOPMENT.md)
+- [История версий Alpha 0.53–0.61](CHANGELOG.md)
+- [Сценарии тестирования Alpha 0.61](ALPHA_061_QA.md)
+- [Визуальные материалы 0.56](VISUAL_POLISH_056_STATUS.md)
+- [Участие в разработке](CONTRIBUTING.md)
+- [Сообщения об уязвимостях](SECURITY.md)
 
-The launcher:
-- pulls `main`, validates 9 1024px PNG textures against PNG CRC and SHA-256,
-- builds the current Unreal Engine 5.8 editor target,
-- creates **new PBR056 material assets** without overwriting old PBR055,
-- creates and saves **`TestWorld_Visual056.umap` as a separate level** while preserving original TestWorld,
-- offers an optional confirmed upload of texture PNGs, generated `.uasset` materials, and test maps to your PRIVATE GitHub repository.
+## Открытый код и права
 
-No force push, no automatic override of startup maps. See [VISUAL_POLISH_056_STATUS.md](VISUAL_POLISH_056_STATUS.md).
+Репозиторий сейчас **публичный**, но **лицензия не выбрана**. Публичная видимость не делает исходники, 3D-модели, текстуры и документацию свободными для копирования, распространения или коммерческого использования. До публикации релизных материалов необходимо проверить происхождение всех ассетов и выбрать лицензию отдельно.
 
-**Limitations:** The archive's PNG binary assets are still local-only until uploaded on Windows; the Unreal shader compilation, gameplay rendering and server behavior have not been verified in this environment. 3D character models, foliage detail, animations, and release-quality graphics are not finished.
-
-
-## Alpha 0.57 — renewable hydration and interaction UX
-
-**Current source changes (8 November 2026):** A missing survival gameplay loop has been closed: renewable water nodes, server-validated `Q` drinking (one item restores 35 thirst), four guaranteed sources near spawn and additional POI/wilderness supplies. Existing inventory, replication, anti-duplication checks and resource regeneration are reused. Aiming at an interactable now shows its name and remaining quantity. Inventory focus blocks combat/movement actions and drops sprint.
-
-`Tools/create_consumable_materials_057.py` adds non-destructive prototype Water/Berries/Echo PBR colors. The latest Visual Polish 0.56 installer calls this script automatically through `Tools/finalize_visual_polish_056.py` when source textures have been supplied.
-
-**Windows check:** after `git pull origin main`, run `TEST_ALPHA_057_WINDOWS.bat`. This runs all offline tests and attempts a genuine Unreal Editor build. Then follow [ALPHA_057_QA.md](ALPHA_057_QA.md) for manual two-player tests. Neither compilation nor multiplayer success has been independently confirmed for 0.57.
-
-
-## Alpha 0.58 — base raids and owner repairs
-
-The multiplayer construction prototype now has server-owned durability and raids:
-
-- Foundation **600 HP**, wall **360 HP**. HP and builder PlayerState are replicated.
-- A player can melee a visible structure for **35 damage** per validated server hit. Destroying a piece at 0 HP removes it for all connected players.
-- Builders can press **R** to repair their own damaged piece for **1 wood + 1 stone**, restoring up to **75 HP**, but only **12 seconds** after the last attack.
-- The HUD shows visible structure HP and a green/amber/red condition bar. Clients send no structure reference or HP amount to the server for repair.
-
-After `git pull origin main`, run `TEST_ALPHA_058_WINDOWS.bat` on a Windows computer with Unreal Engine 5.8 to execute offline checks and build `NYVERRAEditor`. Then follow [ALPHA_058_QA.md](ALPHA_058_QA.md) for the **two-player** manual raid/repair tests. The current GitHub source edits have not yet been independently compiled or tested in Unreal Engine.
-
-**Still absent:** permanent account/ownership persistence, raid explosives, doors, raid loot, full multiplayer server QA, finished realistic assets and a packaged game. The tested `TestWorld.umap` and PBR source textures also need to be synchronized from Windows.
-
-
-## Alpha 0.59 — locked building doors
-
-Building type 2 adds an **owner-only locked door** with 280 HP and its own cost of **6 wood + 4 stone**. Place it against an existing foundation with **5**, press **E** to open it. Opening replicates to clients; after eight seconds the server automatically closes the prototype slab, but waits while another pawn or moving obstacle occupies the doorway. The door cannot be created on bare terrain, and can be destroyed using the existing server-authoritative melee raid system. Only the original builder may open or repair it.
-
-This is a **functional source prototype**, not an animated finished door model. Current ownership uses the active `PlayerState`, not a durable account ID. Door permissions therefore do not survive server shutdown or account reconnect; full base persistence and group keys are future work.
-
-After `git pull origin main`, run `TEST_ALPHA_059_WINDOWS.bat` to run offline checks and attempt an **actual UE5.8 C++ editor build**. Follow [ALPHA_059_QA.md](ALPHA_059_QA.md) for required 2-player PIE verification. None of the 0.59 gameplay changes has been verified inside Unreal Editor yet.
-
-
-## Alpha 0.60 — persistent buildings and server ownership
-
-First server-side `USaveGame` persistence for **foundations, walls and locked doors**. Records have a server-generated `FGuid`, type, location, rotation, health and a non-replicated online owner key. Saves are per-level `NYVERRA_Bases_v1_<MapName>` slots under the SERVER's `Saved/SaveGames/`. The system reloads only fully validated v1 files, stops overwriting damaged or incompatible saves, and caps maps at 1024 pieces.
-
-- Server coalesces edits into a 3-second save, plus 60-second autosave.
-- Single-player Standalone retains ownership. Multiplayer owner rebind requires a trustworthy `PlayerState` online ID — **never a nickname**.
-- In PIE, saving to disk is intentionally disabled to protect real server world data.
-- Save files are **not part of Git**. Make a local backup after stopping the server using `Tools/Backup-NyverraBaseSaves.ps1`.
-- This saves **buildings only** (NOT players, inventories, resources, weather, accounts or seasonal wipes). Sudden power loss can still damage or lose recent saves, so run your own backup policy.
-
-Run `git pull origin main` then `TEST_ALPHA_060_WINDOWS.bat` on your UE5.8 Windows machine. After a successful compile, perform a genuine standalone restart and two-player login test using [ALPHA_060_QA.md](ALPHA_060_QA.md). Source changes have not yet been verified by compiling the 0.60 C++ in UE5.8 or by running a dedicated server.
-
-
-## Alpha 0.61 — recoverable A/B building snapshots
-
-To reduce the risk of losing all bases after an interrupted save, Alpha 0.61 rotates snapshots between **A** (`NYVERRA_Bases_v1_<Map>`) and **B** (`NYVERRA_Bases_v1_<Map>_B`), using a monotonically increasing `SaveRevision`. The v1 single-slot save from Alpha 0.60 is still readable as revision 0. On load, the server validates both slots and chooses the newest valid copy; after a save it immediately reads back the written slot before advancing the revision.
-
-If both copies are damaged or a write/read-back fails, the server fails closed: building, raids against buildings and repairs are blocked until an administrator fixes the save state. **Never upload `Saved/` to GitHub**, including when the repository is public, because a save can contain owner network IDs.
-
-On Windows, run `TEST_ALPHA_061_WINDOWS.bat` to run source checks and attempt the Unreal Engine 5.8 editor build. Follow [ALPHA_061_QA.md](ALPHA_061_QA.md) for real standalone/dedicated-server restart tests. `Tools/Inspect-NyverraBaseSaves.ps1` shows local slot metadata and SHA256 without changing saves.
-
-**Status:** C++ is committed but has NOT been compiled or playtested in UE5.8 in this session. A/B snapshots are not a substitute for off-server backups, and player inventories/account progression are not yet persisted.
+**Автор / разработка:** [Zeihos](https://github.com/Zeihos). Проект находится в разработке; предложения и воспроизводимые отчёты об ошибках приветствуются.
