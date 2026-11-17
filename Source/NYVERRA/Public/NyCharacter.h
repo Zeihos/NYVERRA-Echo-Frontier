@@ -3,6 +3,7 @@
 #include "GameFramework/Character.h"
 #include "NyCharacter.generated.h"
 class UCameraComponent;
+class UNyPlayerSaveGame;
 UENUM(BlueprintType)
 enum class ENyItemId : uint8 { Wood, Stone, EchoShard, Berries, Axe, Pickaxe, Water };
 USTRUCT(BlueprintType)
@@ -33,6 +34,9 @@ public:
  int32 CountItem(ENyItemId Item) const;
  // Server-only loot insertion with full inventory capacity validation.
  bool GiveLoot(ENyItemId Item,int32 Quantity);
+ // Only authoritative GameMode may capture/apply persistent character state.
+ bool CapturePersistentState(UNyPlayerSaveGame* Save) const;
+ bool ApplyPersistentState(const UNyPlayerSaveGame* Save);
  UFUNCTION(Server,Reliable) void ServerInteract();
  UFUNCTION(Server,Reliable) void ServerPlacePiece(uint8 Type);
  UFUNCTION(Server,Reliable) void ServerRepairPiece();
