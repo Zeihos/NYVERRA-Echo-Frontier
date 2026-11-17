@@ -322,6 +322,12 @@ void ANyCharacter::Tick(float DT){
 void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  if(Health<=0.f||bIsDead)return;
  if(!HasAuthority()||!IsValid(GetPlayerState())||Type>2)return;
+ // SaveGame v1 is intentionally capped at 1024 pieces. Refuse to place more
+ // BEFORE charging resources; otherwise the server couldn't persist all bases.
+ int32 LivePieces=0;
+ for(TActorIterator<ANyBuildPiece> It(GetWorld());It;++It){
+  if(IsValid(*It)&&++LivePieces>=1024)return;
+ }
  const int32 WoodCost=Type==2?6:4;
  const int32 StoneCost=Type==2?4:2;
  if(CountItem(ENyItemId::Wood)<WoodCost||CountItem(ENyItemId::Stone)<StoneCost)return;
