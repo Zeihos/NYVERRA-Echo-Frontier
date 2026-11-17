@@ -26,6 +26,8 @@ class NYVERRA_API UNyBaseSaveGame : public USaveGame
  GENERATED_BODY()
 public:
  UPROPERTY(SaveGame) int32 FormatVersion=1;
+ // Defaults to zero for saves created by Alpha 0.60 (legacy v1 slot).
+ UPROPERTY(SaveGame) int64 SaveRevision=0;
  UPROPERTY(SaveGame) FString MapName;
  UPROPERTY(SaveGame) TArray<FNySavedBuildPiece> Pieces;
 };
