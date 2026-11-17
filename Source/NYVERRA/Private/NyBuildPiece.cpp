@@ -41,7 +41,12 @@ void ANyBuildPiece::Initialize(uint8 NewType,APlayerState* InBuilder){
 FString ANyBuildPiece::OnlineOwnerKey(const APlayerState* Player){
  if(!IsValid(Player))return FString();
  const FUniqueNetIdRepl& NetId=Player->GetUniqueId();
- // Display names and client-provided values are never owner credentials.
+ // An offline single-player world has no other clients. It may safely use
+ // one local owner, even without a configured OnlineSubsystem.
+ if(const UWorld* W=Player->GetWorld()){
+  if(W->GetNetMode()==NM_Standalone)return TEXT("LOCAL_STANDALONE_OWNER_V1");
+ }
+ // Multiplayer must NEVER trust a name or a client-provided identity.
  return NetId.IsValid()?NetId.ToString():FString();
 }
 
