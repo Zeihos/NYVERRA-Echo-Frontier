@@ -7,6 +7,10 @@
 #include "NyWorldState.h"
 #include "NyBuildPiece.h"
 #include "NyBaseSaveGame.h"
+#include "NyPlayerSaveGame.h"
+#include "Misc/SecureHash.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/PlayerController.h"
@@ -88,6 +92,9 @@ void ANyGameMode::BeginPlay(){
   if(ShouldPersistBases()&&!bBaseSaveReadOnly)
    GetWorldTimerManager().SetTimer(BaseAutosaveTimer,this,
     &ANyGameMode::SaveBases,60.f,true);
+  if(ShouldPersistPlayers())
+   GetWorldTimerManager().SetTimer(PlayerAutosaveTimer,this,
+    &ANyGameMode::SaveActivePlayers,60.f,true);
  }
 }
 void ANyGameMode::SpawnServerResources(){
@@ -368,10 +375,187 @@ void ANyGameMode::PostLogin(APlayerController* NewPlayer){
 }
 
 void ANyGameMode::Logout(AController* Exiting){
+ // Save before Super::Logout destroys PlayerState/pawn ownership.
+ if(Exiting){
+  if(ANyCharacter* Pawn=Cast<ANyCharacter>(Exiting->GetPawn()))
+   SavePlayerState(Pawn);
+  PlayerLoadAttemptedControllers.Remove(Exiting);
+ }
  APlayerState* Departing=Exiting?Exiting->GetPlayerState<APlayerState>():nullptr;
  if(HasAuthority()&&IsValid(Departing)){
   for(TActorIterator<ANyBuildPiece> It(GetWorld());It;++It)
    if(IsValid(*It))It->UnbindDepartingOwner(Departing);
  }
  Super::Logout(Exiting);
+}
+
+
+// Alpha 0.62 — player inventories / survival stats use separate server slots.
+// NO online persistence by default. A dedicated/listen server must configure
+// genuine, authenticated OnlineSubsystem IDs and explicitly opt in with
+// -NyAllowAuthenticatedPlayerSaves. Null/LAN IDs are not secure credentials.
+bool ANyGameMode::ShouldPersistPlayers() const{
+ return ShouldPersistBases();
+}
+
+FString ANyGameMode::PlayerPersistenceKey(const APlayerState* Player) const{
+ if(!ShouldPersistPlayers()||!IsValid(Player)||!GetWorld())return FString();
+ if(GetWorld()->GetNetMode()!=NM_Standalone &&
+    !FParse::Param(FCommandLine::Get(),TEXT("NyAllowAuthenticatedPlayerSaves")))
+  return FString(); // A valid ID is not proof of online authentication.
+ return ANyBuildPiece::OnlineOwnerKey(Player);
+}
+
+FString ANyGameMode::PlayerSaveSlot(const FString& Key) const{
+ const FString Map=UGameplayStatics::GetCurrentLevelName(this,true);
+ if(Key.IsEmpty()||Map.IsEmpty())return FString();
+ // Hashing avoids treating provider-specific account IDs as file paths.
+ // This digest is an INDEX, not authentication or encryption.
+ return TEXT("NYVERRA_Player_v1_")+FMD5::HashAnsiString(*(Map+TEXT("|")+Key));
+}
+
+void ANyGameMode::RequestPlayerSave(){
+ if(!ShouldPersistPlayers()||bLoadingPlayerState)return;
+ // Multiple inventory operations / survival ticks share one disk write.
+ if(!GetWorldTimerManager().IsTimerActive(PlayerDirtySaveTimer))
+  GetWorldTimerManager().SetTimer(PlayerDirtySaveTimer,this,
+   &ANyGameMode::SaveActivePlayers,5.f,false);
+}
+
+// Strict validation BEFORE applying server state or trusting a snapshot.
+static bool NyValidPlayerSnapshot(const UNyPlayerSaveGame* Save,
+                                  const FString& Map,const FString& Digest){
+ if(!Save||Save->FormatVersion!=1||Save->SaveRevision<0||
+    Save->SaveRevision==MAX_int64||Save->MapName!=Map||
+    Save->OwnerDigest!=Digest||Save->Inventory.Num()>16||
+    Save->DeathCount<0||Save->DeathCount>1000000)return false;
+ const float Values[]={Save->Health,Save->Hunger,Save->Thirst,Save->Stamina};
+ for(float Value:Values)if(!FMath::IsFinite(Value)||Value<0.f||Value>100.f)return false;
+ if((!Save->bWasDead&&Save->Health<=0.f)||
+    (Save->bWasDead&&Save->Inventory.Num()>0))return false;
+ for(const FNySavedPlayerStack& Entry:Save->Inventory){
+  if(Entry.ItemId>static_cast<uint8>(ENyItemId::Water))return false;
+  const bool bTool=Entry.ItemId==static_cast<uint8>(ENyItemId::Axe)||
+                   Entry.ItemId==static_cast<uint8>(ENyItemId::Pickaxe);
+  if(Entry.Quantity<=0||Entry.Quantity>(bTool?1:100))return false;
+ }
+ return true;
+}
+
+void ANyGameMode::LoadPlayerState(ANyCharacter* Pawn){
+ if(!ShouldPersistPlayers()||!IsValid(Pawn)||!Pawn->HasAuthority())return;
+ const FString Key=PlayerPersistenceKey(Pawn->GetPlayerState());
+ const FString SlotA=PlayerSaveSlot(Key);
+ if(SlotA.IsEmpty())return;
+ const FString SlotB=SlotA+TEXT("_B");
+ const bool HasA=UGameplayStatics::DoesSaveGameExist(SlotA,0);
+ const bool HasB=UGameplayStatics::DoesSaveGameExist(SlotB,0);
+ if(!HasA&&!HasB)return;
+ const FString Map=UGameplayStatics::GetCurrentLevelName(this,true);
+ const FString Digest=FMD5::HashAnsiString(*Key);
+ UNyPlayerSaveGame* A=HasA?Cast<UNyPlayerSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotA,0)):nullptr;
+ UNyPlayerSaveGame* B=HasB?Cast<UNyPlayerSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotB,0)):nullptr;
+ const bool ValidA=HasA&&NyValidPlayerSnapshot(A,Map,Digest);
+ const bool ValidB=HasB&&NyValidPlayerSnapshot(B,Map,Digest);
+ if(!ValidA&&!ValidB){
+  ProtectedPlayerSlots.Add(SlotA);
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA PlayerSave] Both player snapshots invalid; refusing to overwrite %s"),*SlotA);
+  return;
+ }
+ const bool UseB=ValidB&&(!ValidA||B->SaveRevision>A->SaveRevision);
+ UNyPlayerSaveGame* Best=UseB?B:A;
+ PlayerSaveRevisions.Add(SlotA,Best->SaveRevision);
+ PlayerNextBackup.Add(SlotA,!UseB);
+ bLoadingPlayerState=true;
+ const bool Loaded=Pawn->ApplyPersistentState(Best);
+ bLoadingPlayerState=false;
+ if(!Loaded){
+  ProtectedPlayerSlots.Add(SlotA);
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA PlayerSave] Could not apply validated player state; slot protected"));
+  return;
+ }
+ if((HasA&&!ValidA)||(HasB&&!ValidB))
+  UE_LOG(LogTemp,Warning,TEXT("[NYVERRA PlayerSave] Recovered from valid %s snapshot"),UseB?TEXT("B"):TEXT("A"));
+ UE_LOG(LogTemp,Display,TEXT("[NYVERRA PlayerSave] Restored revision %lld from slot %s"),
+  static_cast<long long>(Best->SaveRevision),UseB?TEXT("B"):TEXT("A"));
+}
+
+void ANyGameMode::SavePlayerState(ANyCharacter* Pawn){
+ if(!ShouldPersistPlayers()||bLoadingPlayerState||!IsValid(Pawn)||!Pawn->HasAuthority())return;
+ const FString Key=PlayerPersistenceKey(Pawn->GetPlayerState());
+ const FString SlotA=PlayerSaveSlot(Key);
+ if(SlotA.IsEmpty()||ProtectedPlayerSlots.Contains(SlotA))return;
+ const int64 Revision=PlayerSaveRevisions.FindRef(SlotA);
+ if(Revision==MAX_int64)return;
+ const bool UseB=PlayerNextBackup.FindRef(SlotA);
+ const FString Target=UseB?SlotA+TEXT("_B"):SlotA;
+ UNyPlayerSaveGame* Save=Cast<UNyPlayerSaveGame>(
+  UGameplayStatics::CreateSaveGameObject(UNyPlayerSaveGame::StaticClass()));
+ if(!Save||!Pawn->CapturePersistentState(Save)){
+  ProtectedPlayerSlots.Add(SlotA);
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA PlayerSave] Invalid live state; player save locked"));
+  return;
+ }
+ Save->FormatVersion=1;
+ Save->SaveRevision=Revision+1;
+ Save->MapName=UGameplayStatics::GetCurrentLevelName(this,true);
+ Save->OwnerDigest=FMD5::HashAnsiString(*Key);
+ if(!UGameplayStatics::SaveGameToSlot(Save,Target,0)){
+  ProtectedPlayerSlots.Add(SlotA);
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA PlayerSave] Write failed; player save locked"));
+  return;
+ }
+ UNyPlayerSaveGame* Disk=Cast<UNyPlayerSaveGame>(UGameplayStatics::LoadGameFromSlot(Target,0));
+ if(!NyValidPlayerSnapshot(Disk,Save->MapName,Save->OwnerDigest)||
+    Disk->SaveRevision!=Save->SaveRevision||
+    Disk->Inventory.Num()!=Save->Inventory.Num()||
+    Disk->DeathCount!=Save->DeathCount||
+    Disk->bWasDead!=Save->bWasDead||
+    !FMath::IsNearlyEqual(Disk->Health,Save->Health)||
+    !FMath::IsNearlyEqual(Disk->Hunger,Save->Hunger)||
+    !FMath::IsNearlyEqual(Disk->Thirst,Save->Thirst)||
+    !FMath::IsNearlyEqual(Disk->Stamina,Save->Stamina)){
+  ProtectedPlayerSlots.Add(SlotA);
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA PlayerSave] Read-back validation failed; player save locked"));
+  return;
+ }
+ for(int32 i=0;i<Save->Inventory.Num();++i){
+  if(Disk->Inventory[i].ItemId!=Save->Inventory[i].ItemId||
+     Disk->Inventory[i].Quantity!=Save->Inventory[i].Quantity){
+   ProtectedPlayerSlots.Add(SlotA);
+   UE_LOG(LogTemp,Error,TEXT("[NYVERRA PlayerSave] Read-back inventory mismatch; slot protected"));
+   return;
+  }
+ }
+ PlayerSaveRevisions.Add(SlotA,Save->SaveRevision);
+ PlayerNextBackup.Add(SlotA,!UseB);
+ UE_LOG(LogTemp,Verbose,TEXT("[NYVERRA PlayerSave] Saved revision %lld"),
+  static_cast<long long>(Save->SaveRevision));
+}
+
+void ANyGameMode::SaveActivePlayers(){
+ if(!ShouldPersistPlayers()||!GetWorld())return;
+ for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It){
+  APlayerController* PC=It->Get();
+  if(!IsValid(PC))continue;
+  if(ANyCharacter* Pawn=Cast<ANyCharacter>(PC->GetPawn()))
+   SavePlayerState(Pawn);
+ }
+}
+
+void ANyGameMode::RestartPlayer(AController* NewPlayer){
+ Super::RestartPlayer(NewPlayer);
+ if(!HasAuthority()||!NewPlayer||PlayerLoadAttemptedControllers.Contains(NewPlayer))return;
+ ANyCharacter* Pawn=Cast<ANyCharacter>(NewPlayer->GetPawn());
+ if(!IsValid(Pawn))return;
+ // Only first spawn per connected controller may load a disk snapshot.
+ // A later respawn must not resurrect older inventory and undo death loss.
+ PlayerLoadAttemptedControllers.Add(NewPlayer);
+ LoadPlayerState(Pawn);
+}
+
+void ANyGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason){
+ if(HasAuthority()&&ShouldPersistPlayers())SaveActivePlayers();
+ PlayerLoadAttemptedControllers.Reset();
+ Super::EndPlay(EndPlayReason);
 }
