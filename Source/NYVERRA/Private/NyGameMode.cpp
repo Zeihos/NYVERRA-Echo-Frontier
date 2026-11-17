@@ -258,35 +258,52 @@ void ANyGameMode::SaveBases(){
 
 void ANyGameMode::LoadBases(){
  if(!ShouldPersistBases())return;
- const FString Slot=BaseSlotName();
- if(Slot.IsEmpty()||!UGameplayStatics::DoesSaveGameExist(Slot,0))return;
- UNyBaseSaveGame* Save=Cast<UNyBaseSaveGame>(
-  UGameplayStatics::LoadGameFromSlot(Slot,0));
+ const FString SlotA=BaseSlotName();
+ if(SlotA.IsEmpty())return;
+ const FString SlotB=SlotA+TEXT("_B");
+ const bool bHaveA=UGameplayStatics::DoesSaveGameExist(SlotA,0);
+ const bool bHaveB=UGameplayStatics::DoesSaveGameExist(SlotB,0);
+ if(!bHaveA&&!bHaveB)return;
+
+ // Validate BOTH slots independently. A failed/incomplete write to one slot
+ // must never destroy the older valid snapshot on the other slot.
  const FString CurrentMap=UGameplayStatics::GetCurrentLevelName(this,true);
- if(!Save||Save->FormatVersion!=1||Save->MapName!=CurrentMap||
-    Save->Pieces.Num()>1024){
-  bBaseSaveReadOnly=true; // Protect unknown, incompatible or damaged saves.
-  UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Invalid save; read-only until admin backup/repair"));
+ auto IsValidSnapshot=[&CurrentMap](const UNyBaseSaveGame* Snapshot)->bool{
+  if(!Snapshot||Snapshot->FormatVersion!=1||
+     Snapshot->SaveRevision<0||Snapshot->SaveRevision==MAX_int64||
+     Snapshot->MapName!=CurrentMap||Snapshot->Pieces.Num()>1024)return false;
+  TSet<FGuid> Seen;
+  for(const FNySavedBuildPiece& E:Snapshot->Pieces){
+   const float ExpectedHP=E.PieceType==0?600.f:E.PieceType==1?360.f:280.f;
+   if(E.PieceType>2||!E.PersistentId.IsValid()||
+      E.Location.ContainsNaN()||E.Rotation.ContainsNaN()||
+      FMath::Abs(E.Location.X)>5000.f||FMath::Abs(E.Location.Y)>5000.f||
+      FMath::Abs(E.Location.Z)>10000.f||!FMath::IsFinite(E.Durability)||
+      E.Durability<=0.f||E.Durability>ExpectedHP||
+      E.OwnerNetworkId.Len()>256||Seen.Contains(E.PersistentId))return false;
+   Seen.Add(E.PersistentId);
+  }
+  return true;
+ };
+ UNyBaseSaveGame* SaveA=bHaveA?Cast<UNyBaseSaveGame>(
+  UGameplayStatics::LoadGameFromSlot(SlotA,0)):nullptr;
+ UNyBaseSaveGame* SaveB=bHaveB?Cast<UNyBaseSaveGame>(
+  UGameplayStatics::LoadGameFromSlot(SlotB,0)):nullptr;
+ const bool bValidA=bHaveA&&IsValidSnapshot(SaveA);
+ const bool bValidB=bHaveB&&IsValidSnapshot(SaveB);
+ if(!bValidA&&!bValidB){
+  bBaseSaveReadOnly=true; // Never overwrite the only copies of broken data.
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Both snapshots invalid; read-only until backup/repair"));
   return;
  }
- // Validate the complete input BEFORE spawning any actors. A malformed save
- // must never erase, duplicate or partially replace the world.
- TSet<FGuid> Seen;
- for(const FNySavedBuildPiece& E:Save->Pieces){
-  const float ExpectedHP=E.PieceType==0?600.f:E.PieceType==1?360.f:280.f;
-  const bool bBad=E.PieceType>2||!E.PersistentId.IsValid()||
-   E.Location.ContainsNaN()||E.Rotation.ContainsNaN()||
-   FMath::Abs(E.Location.X)>5000.f||FMath::Abs(E.Location.Y)>5000.f||
-   FMath::Abs(E.Location.Z)>10000.f||!FMath::IsFinite(E.Durability)||
-   E.Durability<=0.f||E.Durability>ExpectedHP||
-   E.OwnerNetworkId.Len()>256||Seen.Contains(E.PersistentId);
-  if(bBad){
-   bBaseSaveReadOnly=true;
-   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Invalid building record; no actors loaded"));
-   return;
-  }
-  Seen.Add(E.PersistentId);
- }
+ // Legacy Alpha 0.60 single-slot SaveGame has SaveRevision=0 and loads as A.
+ const bool bUseB=bValidB&&(!bValidA||SaveB->SaveRevision>SaveA->SaveRevision);
+ UNyBaseSaveGame* Save=bUseB?SaveB:SaveA;
+ BaseSaveRevision=Save->SaveRevision;
+ // Next write goes to the OTHER slot, never overwriting the just-loaded copy.
+ bNextSaveToBackup=!bUseB;
+ if((bHaveA&&!bValidA)||(bHaveB&&!bValidB))
+  UE_LOG(LogTemp,Warning,TEXT("[NYVERRA BaseSave] Invalid snapshot ignored; recovered from valid %s"),bUseB?TEXT("B"):TEXT("A"));
  bLoadingBases=true;
  int32 Restored=0;
  for(const FNySavedBuildPiece& E:Save->Pieces){
@@ -295,16 +312,17 @@ void ANyGameMode::LoadBases(){
   ANyBuildPiece* Piece=GetWorld()->SpawnActor<ANyBuildPiece>(
    ANyBuildPiece::StaticClass(),E.Location,E.Rotation,Params);
   if(!Piece){
-   bBaseSaveReadOnly=true; // Never overwrite a save after a partial load.
-   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Could not spawn saved building; slot read-only"));
+   bBaseSaveReadOnly=true; // Do not write an incomplete world over either slot.
+   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Spawn failed; protected read-only state"));
    break;
   }
   Piece->RestoreFromSave(E.PieceType,E.PersistentId,E.Durability,E.OwnerNetworkId);
   ++Restored;
  }
  bLoadingBases=false;
- UE_LOG(LogTemp,Display,TEXT("[NYVERRA BaseSave] Loaded %d / %d pieces from %s"),
-  Restored,Save->Pieces.Num(),*Slot);
+ UE_LOG(LogTemp,Display,TEXT("[NYVERRA BaseSave] Loaded %d/%d pieces, revision %lld, slot %s"),
+  Restored,Save->Pieces.Num(),static_cast<long long>(BaseSaveRevision),
+  bUseB?TEXT("B"):TEXT("A"));
 }
 
 void ANyGameMode::BindPlayerToSavedBases(APlayerState* Player){
