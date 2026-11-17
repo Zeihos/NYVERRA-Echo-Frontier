@@ -2,7 +2,7 @@
 
 Private Unreal Engine 5.8 C++ multiplayer survival prototype (Windows; PvP/PvE, building, crafting).
 
-**Latest sources: Alpha 0.60 (prototype) + Unreal Engine 5.8 compilation fixes.** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
+**Latest sources: Alpha 0.61 (prototype) + Unreal Engine 5.8 compilation fixes.** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
 
 ## First playable test map
 
@@ -147,3 +147,14 @@ First server-side `USaveGame` persistence for **foundations, walls and locked do
 - This saves **buildings only** (NOT players, inventories, resources, weather, accounts or seasonal wipes). Sudden power loss can still damage or lose recent saves, so run your own backup policy.
 
 Run `git pull origin main` then `TEST_ALPHA_060_WINDOWS.bat` on your UE5.8 Windows machine. After a successful compile, perform a genuine standalone restart and two-player login test using [ALPHA_060_QA.md](ALPHA_060_QA.md). Source changes have not yet been verified by compiling the 0.60 C++ in UE5.8 or by running a dedicated server.
+
+
+## Alpha 0.61 — recoverable A/B building snapshots
+
+To reduce the risk of losing all bases after an interrupted save, Alpha 0.61 rotates snapshots between **A** (`NYVERRA_Bases_v1_<Map>`) and **B** (`NYVERRA_Bases_v1_<Map>_B`), using a monotonically increasing `SaveRevision`. The v1 single-slot save from Alpha 0.60 is still readable as revision 0. On load, the server validates both slots and chooses the newest valid copy; after a save it immediately reads back the written slot before advancing the revision.
+
+If both copies are damaged or a write/read-back fails, the server fails closed: building, raids against buildings and repairs are blocked until an administrator fixes the save state. **Never upload `Saved/` to GitHub**, including when the repository is public, because a save can contain owner network IDs.
+
+On Windows, run `TEST_ALPHA_061_WINDOWS.bat` to run source checks and attempt the Unreal Engine 5.8 editor build. Follow [ALPHA_061_QA.md](ALPHA_061_QA.md) for real standalone/dedicated-server restart tests. `Tools/Inspect-NyverraBaseSaves.ps1` shows local slot metadata and SHA256 without changing saves.
+
+**Status:** C++ is committed but has NOT been compiled or playtested in UE5.8 in this session. A/B snapshots are not a substitute for off-server backups, and player inventories/account progression are not yet persisted.
