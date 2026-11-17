@@ -35,6 +35,9 @@ private:
  FTimerHandle BaseAutosaveTimer;
  FTimerHandle BaseDirtySaveTimer;
  bool bLoadingBases=false;
+ // Alternate A/B slots. The v1 A slot remains readable without migration.
+ int64 BaseSaveRevision=0;
+ bool bNextSaveToBackup=false;
  // Unknown/incompatible/corrupt save files are never overwritten.
  bool bBaseSaveReadOnly=false;
 };
