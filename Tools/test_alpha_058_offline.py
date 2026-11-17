@@ -46,7 +46,7 @@ class TestRaidingAndRepair(unittest.TestCase):
         validation = self.build.split("bool ANyBuildPiece::CanRepair(")[1].split(
             "bool ANyBuildPiece::Repair(")[0]
         for expect in (
-            "!HasAuthority()", "BuilderPlayerState!=Requester",
+            "!HasAuthority()", "!IsBuildOwner(Requester)",
             "Durability<=0.f", "Durability>=MaxDurability",
             "GetWorld()->GetTimeSeconds()-LastDamageTime>=12.f",
         ):
