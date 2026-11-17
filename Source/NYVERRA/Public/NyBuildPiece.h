@@ -27,6 +27,15 @@ public:
  UPROPERTY(Replicated, BlueprintReadOnly, Category="Building")
  APlayerState* BuilderPlayerState=nullptr;
 
+ // A server-assigned identifier lets save/load roundtrip every individual piece.
+ UPROPERTY(Replicated, BlueprintReadOnly, Category="Building")
+ FGuid PersistentId;
+
+ // Only stored on the authoritative server. Never replicate online IDs to
+ // other players; LAN/PIE sessions without an online ID use PlayerState only.
+ UPROPERTY()
+ FString BuilderNetworkId;
+
  // Type 2 only. An open door is temporarily non-blocking and closes on a
  // server timer once the doorway is clear of characters.
  UPROPERTY(ReplicatedUsing=OnRep_DoorOpen, BlueprintReadOnly, Category="Building")
@@ -35,6 +44,12 @@ public:
  bool TryOpenDoor(const APlayerState* Requester);
 
  void Initialize(uint8 NewType, APlayerState* InBuilder);
+ void RestoreFromSave(uint8 NewType, const FGuid& SavedId,
+                      float SavedDurability, const FString& SavedOwnerKey);
+ static FString OnlineOwnerKey(const APlayerState* Player);
+ bool IsBuildOwner(const APlayerState* Player) const;
+ void BindReturningOwner(APlayerState* Player);
+ void UnbindDepartingOwner(const APlayerState* Player);
  UFUNCTION() void OnRep_Type();
 
  // Repairs are limited to the builder's active PlayerState in this prototype.
