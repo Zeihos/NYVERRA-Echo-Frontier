@@ -1,7 +1,19 @@
-NYVERRA ALPHA 0.22 (SOURCE ONLY, NOT UE-TESTED)
+NYVERRA: ECHO FRONTIER — ТЕКУЩАЯ ВЕРСИЯ ALPHA 0.61
 
-Open NYVERRA.uproject in Unreal Engine 5.8 and build C++ first. Import the heightmap on a NEW saved level, then use Tools/prepare_landscape_world_022.py via Unreal Editor Tools > Execute Python Script. Review/adjust NavMesh and PlayerStart heights, Build Paths, and save.
+Этот файл сохранён для совместимости со старыми ссылками.
+Актуальный старт проекта:
 
-Read TESTING_022.txt for the full process. Offline check: python Tools/audit_source_022.py.
+1. README.md — описание игры, управление и быстрый запуск.
+2. docs/STATUS.md — что уже есть и что ещё не проверено.
+3. docs/DEVELOPMENT.md — Windows / Unreal Engine 5.8, сборка, тесты.
+4. CHANGELOG.md — текущая история версий.
+5. ALPHA_061_QA.md — сценарий тестирования серверных сохранений.
 
-IMPORTANT: No compiled Windows executable or compiled UE test is included.
+Проверка в папке проекта:
+  CHECK_PROJECT_WINDOWS.bat
+или
+  TEST_ALPHA_061_WINDOWS.bat
+
+Игра находится на стадии прототипа. Исходники не подтверждены
+полной компиляцией и тестированием UE5.8. Проверенной TestWorld.umap
+в репозитории пока нет.
