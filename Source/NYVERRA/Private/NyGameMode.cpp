@@ -263,6 +263,22 @@ void ANyGameMode::SaveBases(){
   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Read-back verification failed for %s; world locked read-only"),*TargetSlot);
   return;
  }
+ // Compare each saved record, not just the header and array length.
+ // This catches a readable but partially modified/truncated snapshot.
+ for(int32 Index=0;Index<Save->Pieces.Num();++Index){
+  const FNySavedBuildPiece& Original=Save->Pieces[Index];
+  const FNySavedBuildPiece& Disk=Verified->Pieces[Index];
+  if(Original.PersistentId!=Disk.PersistentId||
+     Original.PieceType!=Disk.PieceType||
+     !Original.Location.Equals(Disk.Location,KINDA_SMALL_NUMBER)||
+     !Original.Rotation.Equals(Disk.Rotation,KINDA_SMALL_NUMBER)||
+     !FMath::IsNearlyEqual(Original.Durability,Disk.Durability)||
+     Original.OwnerNetworkId!=Disk.OwnerNetworkId){
+   bBaseSaveReadOnly=true;
+   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Record mismatch after read-back; world locked read-only"));
+   return;
+  }
+ }
  BaseSaveRevision=Save->SaveRevision;
  bNextSaveToBackup=!bNextSaveToBackup;
  UE_LOG(LogTemp,Display,TEXT("[NYVERRA BaseSave] Revision %lld: saved %d pieces to %s"),
