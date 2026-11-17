@@ -198,14 +198,17 @@ void ANyGameMode::RequestBaseSave(){
 
 void ANyGameMode::SaveBases(){
  if(!ShouldPersistBases()||bLoadingBases||bBaseSaveReadOnly)return;
- const FString Slot=BaseSlotName();
- if(Slot.IsEmpty())return;
+ const FString PrimarySlot=BaseSlotName();
+ if(PrimarySlot.IsEmpty()||BaseSaveRevision==MAX_int64)return;
+ const FString TargetSlot=bNextSaveToBackup?
+  PrimarySlot+TEXT("_B"):PrimarySlot;
  UWorld* W=GetWorld();
  if(!W)return;
  UNyBaseSaveGame* Save=Cast<UNyBaseSaveGame>(
   UGameplayStatics::CreateSaveGameObject(UNyBaseSaveGame::StaticClass()));
  if(!Save)return;
  Save->FormatVersion=1;
+ Save->SaveRevision=BaseSaveRevision+1;
  Save->MapName=UGameplayStatics::GetCurrentLevelName(this,true);
  TSet<FGuid> Seen;
  for(TActorIterator<ANyBuildPiece> It(W);It;++It){
@@ -243,10 +246,14 @@ void ANyGameMode::SaveBases(){
   Entry.Durability=Piece->Durability;
   Entry.OwnerNetworkId=Piece->BuilderNetworkId;
  }
- if(!UGameplayStatics::SaveGameToSlot(Save,Slot,0))
-  UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] FAILED writing %s; check disk permissions"),*Slot);
- else
-  UE_LOG(LogTemp,Display,TEXT("[NYVERRA BaseSave] Saved %d pieces to %s"),Save->Pieces.Num(),*Slot);
+ if(!UGameplayStatics::SaveGameToSlot(Save,TargetSlot,0)){
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] FAILED writing %s; previous slot preserved"),*TargetSlot);
+  return;
+ }
+ BaseSaveRevision=Save->SaveRevision;
+ bNextSaveToBackup=!bNextSaveToBackup;
+ UE_LOG(LogTemp,Display,TEXT("[NYVERRA BaseSave] Revision %lld: saved %d pieces to %s"),
+  static_cast<long long>(BaseSaveRevision),Save->Pieces.Num(),*TargetSlot);
 }
 
 void ANyGameMode::LoadBases(){
