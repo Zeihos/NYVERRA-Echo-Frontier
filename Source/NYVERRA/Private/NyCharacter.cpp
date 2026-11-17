@@ -4,6 +4,7 @@
 #include "NyEnemy.h"
 #include "Kismet/GameplayStatics.h"
 #include "NyBuildPiece.h"
+#include "NyGameMode.h"
 #include "Engine/World.h"
 #include "Engine/OverlapResult.h"
 #include "Camera/CameraComponent.h"
@@ -322,6 +323,9 @@ void ANyCharacter::Tick(float DT){
 void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  if(Health<=0.f||bIsDead)return;
  if(!HasAuthority()||!IsValid(GetPlayerState())||Type>2)return;
+ if(ANyGameMode* Mode=GetWorld()->GetAuthGameMode<ANyGameMode>()){
+  if(!Mode->CanPlaceBasePieces())return;
+ }
  // SaveGame v1 is intentionally capped at 1024 pieces. Refuse to place more
  // BEFORE charging resources; otherwise the server couldn't persist all bases.
  int32 LivePieces=0;
