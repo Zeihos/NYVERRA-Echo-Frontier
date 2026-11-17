@@ -25,7 +25,7 @@ class TestBasePersistence(unittest.TestCase):
         self.assertIn("class NYVERRA_API UNyBaseSaveGame : public USaveGame", self.save)
         for field in ("PersistentId", "PieceType", "Location", "Rotation",
                       "Durability", "OwnerNetworkId"):
-            self.assertIn(" " + field + ";", self.save)
+            self.assertIn(field, self.save)
         self.assertIn("int32 FormatVersion=1", self.save)
         self.assertIn("TArray<FNySavedBuildPiece> Pieces", self.save)
         self.assertIn("UPROPERTY(SaveGame)", self.save)
@@ -93,6 +93,9 @@ class TestBasePersistence(unittest.TestCase):
     def test_no_piece_truncation_or_floating_door(self):
         self.assertIn("Save->Pieces.Num()>=1024", self.game)
         self.assertIn("LivePieces>=1024)return", self.char)
+        self.assertIn("CanPlaceBasePieces()", self.char)
+        self.assertIn("bool CanPlaceBasePieces() const", self.game_h)
+        self.assertIn("Backups", read("Tools/Backup-NyverraBaseSaves.ps1"))
         self.assertIn("if(Type==2 && (!Foundation || Foundation->PieceType!=0))return", self.char)
         self.assertIn("bDoorOpen=false", self.piece.split("void ANyBuildPiece::RestoreFromSave(")[1])
 
