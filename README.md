@@ -99,7 +99,7 @@ NYVERRA-Echo-Frontier/
 └── NYVERRA.uproject
 ```
 
-**Навигация по проекту:** [документация](docs/README.md) · [план разработки](docs/ROADMAP.md) · [изменения](CHANGELOG.md) · [участие](CONTRIBUTING.md) · [безопасность](SECURITY.md)
+**Навигация по проекту:** [документация](docs/README.md) · [план разработки](docs/ROADMAP.md) · [изменения](CHANGELOG.md) · [архив старых Alpha](docs/archive/README.md) · [участие](CONTRIBUTING.md) · [безопасность](SECURITY.md)
 
 ## ◈ Статус публикации
 
