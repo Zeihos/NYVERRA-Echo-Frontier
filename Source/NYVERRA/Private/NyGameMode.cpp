@@ -414,12 +414,23 @@ FString ANyGameMode::PlayerSaveSlot(const FString& Key) const{
  return TEXT("NYVERRA_Player_v1_")+FMD5::HashAnsiString(*(Map+TEXT("|")+Key));
 }
 
+bool ANyGameMode::HasDuplicatePlayerIdentity(const ANyCharacter* Pawn,
+                                               const FString& Key) const{
+ if(Key.IsEmpty()||!GetWorld())return false;
+ for(FConstPlayerControllerIterator It=GetWorld()->GetPlayerControllerIterator();It;++It){
+  const APlayerController* Other=It->Get();
+  if(!IsValid(Other)||Other->GetPawn()==Pawn)continue;
+  if(PlayerPersistenceKey(Other->GetPlayerState<APlayerState>())==Key)return true;
+ }
+ return false;
+}
+
 void ANyGameMode::RequestPlayerSave(){
  if(!ShouldPersistPlayers()||bLoadingPlayerState)return;
  // Multiple inventory operations / survival ticks share one disk write.
  if(!GetWorldTimerManager().IsTimerActive(PlayerDirtySaveTimer))
   GetWorldTimerManager().SetTimer(PlayerDirtySaveTimer,this,
-   &ANyGameMode::SaveActivePlayers,5.f,false);
+   &ANyGameMode::SaveActivePlayers,20.f,false);
 }
 
 // Strict validation BEFORE applying server state or trusting a snapshot.
@@ -447,6 +458,11 @@ void ANyGameMode::LoadPlayerState(ANyCharacter* Pawn){
  const FString Key=PlayerPersistenceKey(Pawn->GetPlayerState());
  const FString SlotA=PlayerSaveSlot(Key);
  if(SlotA.IsEmpty())return;
+ if(HasDuplicatePlayerIdentity(Pawn,Key)){
+  ProtectedPlayerSlots.Add(SlotA);
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA PlayerSave] Concurrent owner identity: persistence disabled until restart"));
+  return;
+ }
  const FString SlotB=SlotA+TEXT("_B");
  const bool HasA=UGameplayStatics::DoesSaveGameExist(SlotA,0);
  const bool HasB=UGameplayStatics::DoesSaveGameExist(SlotB,0);
@@ -485,6 +501,11 @@ void ANyGameMode::SavePlayerState(ANyCharacter* Pawn){
  const FString Key=PlayerPersistenceKey(Pawn->GetPlayerState());
  const FString SlotA=PlayerSaveSlot(Key);
  if(SlotA.IsEmpty()||ProtectedPlayerSlots.Contains(SlotA))return;
+ if(HasDuplicatePlayerIdentity(Pawn,Key)){
+  ProtectedPlayerSlots.Add(SlotA);
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA PlayerSave] Duplicate session detected; refusing snapshot write"));
+  return;
+ }
  const int64 Revision=PlayerSaveRevisions.FindRef(SlotA);
  if(Revision==MAX_int64)return;
  const bool UseB=PlayerNextBackup.FindRef(SlotA);
