@@ -1,0 +1,22 @@
+name: "Предложить улучшение"
+description: "Новая механика, улучшение или идея для NYVERRA"
+title: "[IDEA] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: purpose
+    attributes:
+      label: "Какую проблему решает предложение?"
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: "Описание решения"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: "Затронутые системы и ограничения"
+      description: "Сервер, сохранения, UI, графика, баланс, совместимость"
