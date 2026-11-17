@@ -58,6 +58,10 @@ class TestRotatingBaseSaves(unittest.TestCase):
         self.assertIn("LoadGameFromSlot(TargetSlot,0)",save)
         self.assertIn("Verified->SaveRevision!=Save->SaveRevision",save)
         self.assertIn("Verified->Pieces.Num()!=Save->Pieces.Num()",save)
+        self.assertIn("Original.PersistentId!=Disk.PersistentId",save)
+        self.assertIn("Original.OwnerNetworkId!=Disk.OwnerNetworkId",save)
+        self.assertIn("!Original.Location.Equals(Disk.Location",save)
+        self.assertIn("Record mismatch after read-back",save)
         self.assertLess(save.index("LoadGameFromSlot(TargetSlot,0)"),
                         save.index("BaseSaveRevision=Save->SaveRevision"))
         self.assertIn("bBaseSaveReadOnly=true",save)
