@@ -33,7 +33,7 @@ NYVERRA: Echo Frontier — разрабатываемая PvPvE-игра с до
 ```bat
 git clone https://github.com/Zeihos/NYVERRA-Echo-Frontier.git
 cd NYVERRA-Echo-Frontier
-TEST_ALPHA_061_WINDOWS.bat
+CHECK_PROJECT_WINDOWS.bat
 ```
 
 Если Unreal Engine расположен не в папке по умолчанию:
