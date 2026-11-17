@@ -37,8 +37,8 @@ class TestLockedDoors(unittest.TestCase):
 
     def test_only_authoritative_owner_opens(self):
         body=self.cpp.split("bool ANyBuildPiece::TryOpenDoor(")[1].split("void ANyBuildPiece::TryCloseDoor()")[0]
-        for token in ("!HasAuthority()","PieceType!=2","!IsValid(Requester)",
-                      "BuilderPlayerState!=Requester","Durability<=0.f",
+        for token in ("!HasAuthority()","PieceType!=2","!IsBuildOwner(Requester)",
+                      "Durability<=0.f",
                       "bDoorOpen=true","&ANyBuildPiece::TryCloseDoor","8.f,false"):
             self.assertIn(token,body)
 
@@ -85,7 +85,7 @@ class TestLockedDoors(unittest.TestCase):
         self.assertIn("Durability=FMath::Max(0.f,Durability-Applied)",self.cpp)
         self.assertIn("if(Durability<=0.f){",self.cpp)
         self.assertIn("Destroy();",self.cpp)
-        self.assertIn("BuilderPlayerState!=Requester",self.cpp)
+        self.assertIn("!IsBuildOwner(Requester)",self.cpp)
         self.assertIn("GetWorld()->GetTimeSeconds()-LastDamageTime>=12.f",self.cpp)
 
 if __name__=="__main__":
