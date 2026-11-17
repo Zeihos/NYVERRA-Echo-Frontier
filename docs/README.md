@@ -8,6 +8,7 @@
 - [Оформление страницы GitHub (About и Topics)](REPOSITORY_PROFILE.md)
 - [Фирменная обложка и знак](../assets/brand/README.md)
 - [История изменений](../CHANGELOG.md)
+- [Архив ранних Alpha и устаревших скриптов](archive/README.md)
 - [Участие в разработке](../CONTRIBUTING.md)
 - [Безопасность и сообщения об уязвимостях](../SECURITY.md)
 
