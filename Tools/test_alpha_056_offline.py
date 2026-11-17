@@ -67,7 +67,12 @@ class TestVisual056Offline(unittest.TestCase):
         self.assertIn('validator["main"]()', py)
         self.assertIn("Existing TestWorld_Visual056 preserved", py)
         self.assertNotIn("delete_asset(", py)
-        self.assertLess(py.index('validator["main"]()'), py.index("import_visual_polish_055.py"))
+        # The finalizer now uses a versioned 056 wrapper, which delegates
+        # to the 055 builder without overwriting previously imported assets.
+        importer = (ROOT / "Tools" / "import_visual_polish_056.py").read_text(encoding="utf-8")
+        self.assertIn('import_visual_polish_055.py', importer)
+        self.assertIn('module.VERSION = "056"', importer)
+        self.assertLess(py.index('validator["main"]()'), py.index("import_visual_polish_056.py"))
 
     def test_windows_pipeline_guards(self):
         bat = (ROOT / "INSTALL_NYVERRA_VISUALS_056_WINDOWS.bat").read_text(encoding="utf-8")
