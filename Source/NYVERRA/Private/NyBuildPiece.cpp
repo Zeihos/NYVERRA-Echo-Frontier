@@ -1,7 +1,9 @@
 #include "NyBuildPiece.h"
 #include "NyCharacter.h"
+#include "NyGameMode.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PlayerState.h"
+#include "GameFramework/OnlineReplStructs.h"
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 #include "UObject/ConstructorHelpers.h"
@@ -23,11 +25,60 @@ ANyBuildPiece::ANyBuildPiece(){
 void ANyBuildPiece::Initialize(uint8 NewType,APlayerState* InBuilder){
  if(!HasAuthority()||NewType>2||!IsValid(InBuilder))return;
  PieceType=NewType;
+ PersistentId=FGuid::NewGuid();
+ BuilderNetworkId=OnlineOwnerKey(InBuilder);
  MaxDurability=NewType==0?600.f:NewType==1?360.f:280.f;
  Durability=MaxDurability;
  BuilderPlayerState=InBuilder;
  LastDamageTime=-1000.f;
  bDoorOpen=false;
+ OnRep_Type();
+ OnRep_DoorOpen();
+ ForceNetUpdate();
+ if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>()) GM->RequestBaseSave();
+}
+
+FString ANyBuildPiece::OnlineOwnerKey(const APlayerState* Player){
+ if(!IsValid(Player))return FString();
+ const FUniqueNetIdRepl& NetId=Player->GetUniqueId();
+ // Display names and client-provided values are never owner credentials.
+ return NetId.IsValid()?NetId.ToString():FString();
+}
+
+bool ANyBuildPiece::IsBuildOwner(const APlayerState* Player) const{
+ if(!HasAuthority()||!IsValid(Player))return false;
+ if(BuilderPlayerState==Player)return true;
+ if(BuilderNetworkId.IsEmpty())return false;
+ const FString Key=OnlineOwnerKey(Player);
+ return !Key.IsEmpty() && Key==BuilderNetworkId;
+}
+
+void ANyBuildPiece::BindReturningOwner(APlayerState* Player){
+ if(!HasAuthority()||!IsValid(Player)||BuilderNetworkId.IsEmpty())return;
+ const FString Key=OnlineOwnerKey(Player);
+ if(!Key.IsEmpty() && Key==BuilderNetworkId && BuilderPlayerState!=Player){
+  BuilderPlayerState=Player;
+  ForceNetUpdate();
+ }
+}
+
+void ANyBuildPiece::UnbindDepartingOwner(const APlayerState* Player){
+ if(!HasAuthority()||!IsValid(Player)||BuilderPlayerState!=Player)return;
+ BuilderPlayerState=nullptr;
+ ForceNetUpdate();
+}
+
+void ANyBuildPiece::RestoreFromSave(uint8 NewType, const FGuid& SavedId,
+                                   float SavedDurability, const FString& SavedOwnerKey){
+ if(!HasAuthority()||NewType>2||!SavedId.IsValid())return;
+ PieceType=NewType;
+ PersistentId=SavedId;
+ MaxDurability=NewType==0?600.f:NewType==1?360.f:280.f;
+ Durability=FMath::Clamp(SavedDurability,1.f,MaxDurability);
+ BuilderNetworkId=SavedOwnerKey;
+ BuilderPlayerState=nullptr; // Rebound in GameMode::PostLogin by online ID.
+ bDoorOpen=false;             // Doors restart closed, never blocking in an open state.
+ LastDamageTime=-1000.f;
  OnRep_Type();
  OnRep_DoorOpen();
  ForceNetUpdate();
@@ -53,7 +104,7 @@ void ANyBuildPiece::OnRep_DoorOpen(){
 
 bool ANyBuildPiece::TryOpenDoor(const APlayerState* Requester){
  if(!HasAuthority()||PieceType!=2||bDoorOpen||Durability<=0.f||
-    !IsValid(Requester)||BuilderPlayerState!=Requester||!GetWorld())return false;
+    !IsBuildOwner(Requester)||!GetWorld())return false;
  bDoorOpen=true;
  OnRep_DoorOpen();
  ForceNetUpdate();
@@ -97,6 +148,7 @@ float ANyBuildPiece::TakeDamage(float DamageAmount,const FDamageEvent& DamageEve
  Durability=FMath::Max(0.f,Durability-Applied);
  LastDamageTime=GetWorld()->GetTimeSeconds();
  ForceNetUpdate();
+ if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>()) GM->RequestBaseSave();
  if(Durability<=0.f){
   // A destroyed base piece cannot be looted repeatedly or used for physics.
   // Replicated Actor destruction removes it from every connected client.
@@ -106,7 +158,7 @@ float ANyBuildPiece::TakeDamage(float DamageAmount,const FDamageEvent& DamageEve
 }
 
 bool ANyBuildPiece::CanRepair(const APlayerState* Requester) const{
- if(!HasAuthority()||!IsValid(Requester)||BuilderPlayerState!=Requester||
+ if(!HasAuthority()||!IsBuildOwner(Requester)||
     Durability<=0.f||Durability>=MaxDurability||!GetWorld())return false;
  return GetWorld()->GetTimeSeconds()-LastDamageTime>=12.f;
 }
@@ -115,6 +167,7 @@ bool ANyBuildPiece::Repair(const APlayerState* Requester,float Amount){
  if(!CanRepair(Requester)||!FMath::IsFinite(Amount)||Amount<=0.f)return false;
  Durability=FMath::Min(MaxDurability,Durability+FMath::Min(Amount,75.f));
  ForceNetUpdate();
+ if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>()) GM->RequestBaseSave();
  return true;
 }
 
@@ -124,5 +177,6 @@ void ANyBuildPiece::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
  DOREPLIFETIME(ANyBuildPiece,Durability);
  DOREPLIFETIME(ANyBuildPiece,MaxDurability);
  DOREPLIFETIME(ANyBuildPiece,BuilderPlayerState);
+ DOREPLIFETIME(ANyBuildPiece,PersistentId);
  DOREPLIFETIME(ANyBuildPiece,bDoorOpen);
 }
