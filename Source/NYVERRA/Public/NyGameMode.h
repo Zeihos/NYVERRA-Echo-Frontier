@@ -16,6 +16,9 @@ public:
  virtual void Logout(AController* Exiting) override;
  // Called exclusively by server-side build/damage/repair mutations.
  void RequestBaseSave();
+ // Fail closed if an incompatible save was detected: do not charge players
+ // for structures that cannot be written back to the same save slot.
+ bool CanPlaceBasePieces() const { return !bBaseSaveReadOnly; }
 
 private:
  void SpawnServerResources();
