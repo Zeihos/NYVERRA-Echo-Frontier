@@ -1,24 +1,37 @@
-name: NYVERRA offline source checks
+name: NYVERRA — source checks
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: source-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  offline:
+  source-checks:
+    name: Проверка исходников и структуры
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Checkout source
+      - name: Получить исходники
         uses: actions/checkout@v4
-      - name: Set up Python
+
+      - name: Установить Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Check Python syntax
+
+      - name: Проверить синтаксис Python
         run: python -m compileall -q Tools
-      - name: Full Python/Unreal source regression suite (through Alpha 0.61)
+
+      - name: Проверить структуру репозитория и ссылки
+        run: python Tools/check_repository.py
+
+      - name: Регрессионные проверки исходников
         run: python -m unittest discover -s Tools -p "test_alpha_*.py" -v
