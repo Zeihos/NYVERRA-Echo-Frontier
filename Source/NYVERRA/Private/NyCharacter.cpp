@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "NyBuildPiece.h"
 #include "NyGameMode.h"
+#include "NyPlayerSaveGame.h"
 #include "Engine/World.h"
 #include "Engine/OverlapResult.h"
 #include "Camera/CameraComponent.h"
@@ -145,6 +146,7 @@ void ANyCharacter::ReceiveCombatDamage(float Amount,ANyCharacter* Attacker){
  GetCharacterMovement()->DisableMovement();
  GetWorldTimerManager().SetTimer(RespawnTimer,this,&ANyCharacter::RespawnAfterDeath,8.f,false);
  ForceNetUpdate();
+ if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->RequestPlayerSave();
 }
 void ANyCharacter::RespawnAfterDeath(){
  if(!HasAuthority()||!bIsDead)return;
@@ -206,6 +208,7 @@ void ANyCharacter::RespawnAfterDeath(){
  GetCharacterMovement()->SetMovementMode(MOVE_Walking);
  GetCharacterMovement()->MaxWalkSpeed=450.f;
  ForceNetUpdate();
+ if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->RequestPlayerSave();
 }
 void ANyCharacter::PlaceFoundation(){if(!bInventoryOpen&&!bIsDead)ServerPlacePiece(0);}
 void ANyCharacter::PlaceWall(){if(!bInventoryOpen&&!bIsDead)ServerPlacePiece(1);}
@@ -220,10 +223,65 @@ int32 ANyCharacter::CountItem(ENyItemId Item) const {
  int32 Total=0; for(const FNyItemStack& Stack: Inventory) if(Stack.Item==Item) Total+=Stack.Quantity;
  return Total;
 }
+bool ANyCharacter::CapturePersistentState(UNyPlayerSaveGame* Save) const {
+ if(!HasAuthority()||!IsValid(Save)||Inventory.Num()>MaxSlots||MaxSlots<=0)return false;
+ Save->Health=Health;Save->Hunger=Hunger;Save->Thirst=Thirst;Save->Stamina=Stamina;
+ Save->DeathCount=DeathCount;Save->bWasDead=bIsDead;
+ Save->Inventory.Reset();
+ for(const FNyItemStack& Stack:Inventory){
+  const uint8 Id=static_cast<uint8>(Stack.Item);
+  const int32 Limit=Stack.Item==ENyItemId::Axe||Stack.Item==ENyItemId::Pickaxe?1:100;
+  if(Id>static_cast<uint8>(ENyItemId::Water)||Stack.Quantity<1||Stack.Quantity>Limit)
+   return false;
+  if(!bIsDead){
+   FNySavedPlayerStack& Entry=Save->Inventory.AddDefaulted_GetRef();
+   Entry.ItemId=Id;
+   Entry.Quantity=Stack.Quantity;
+  }
+ }
+ return FMath::IsFinite(Health)&&FMath::IsFinite(Hunger)&&
+  FMath::IsFinite(Thirst)&&FMath::IsFinite(Stamina)&&
+  Health>=0.f&&Health<=100.f&&Hunger>=0.f&&Hunger<=100.f&&
+  Thirst>=0.f&&Thirst<=100.f&&Stamina>=0.f&&Stamina<=100.f&&
+  DeathCount>=0&&DeathCount<=1000000;
+}
+
+bool ANyCharacter::ApplyPersistentState(const UNyPlayerSaveGame* Save){
+ if(!HasAuthority()||!IsValid(Save)||Save->Inventory.Num()>MaxSlots)return false;
+ TArray<FNyItemStack> Restored;
+ if(!Save->bWasDead){
+  for(const FNySavedPlayerStack& Entry:Save->Inventory){
+   if(Entry.ItemId>static_cast<uint8>(ENyItemId::Water))return false;
+   const ENyItemId Item=static_cast<ENyItemId>(Entry.ItemId);
+   const int32 Limit=Item==ENyItemId::Axe||Item==ENyItemId::Pickaxe?1:100;
+   if(Entry.Quantity<1||Entry.Quantity>Limit)return false;
+   FNyItemStack Stack;Stack.Item=Item;Stack.Quantity=Entry.Quantity;
+   Restored.Add(Stack);
+  }
+ }
+ // Players who disconnect while dying do not regain their lost inventory.
+ // A fresh pawn always starts alive at a server-selected spawn.
+ Inventory=MoveTemp(Restored);
+ Health=Save->bWasDead?100.f:Save->Health;
+ Hunger=Save->bWasDead?100.f:Save->Hunger;
+ Thirst=Save->bWasDead?100.f:Save->Thirst;
+ Stamina=Save->bWasDead?100.f:Save->Stamina;
+ DeathCount=Save->DeathCount;
+ bIsDead=false;
+ bWantsSprint=false;OnRep_Sprint();
+ RefreshLegacyCounters();
+ ForceNetUpdate();
+ return true;
+}
+
 void ANyCharacter::RefreshLegacyCounters(){
  Wood=CountItem(ENyItemId::Wood); Stone=CountItem(ENyItemId::Stone);
  Echo=CountItem(ENyItemId::EchoShard); Berries=CountItem(ENyItemId::Berries);
  ForceNetUpdate();
+ if(HasAuthority()){
+  if(ANyGameMode* GM=GetWorld()?GetWorld()->GetAuthGameMode<ANyGameMode>():nullptr)
+   GM->RequestPlayerSave();
+ }
 }
 bool ANyCharacter::AddItem(ENyItemId Item,int32 Quantity){
  if(!HasAuthority()||Quantity<=0)return false;
@@ -294,7 +352,10 @@ void ANyCharacter::ServerCraft_Implementation(uint8 RecipeId){
 void ANyCharacter::ServerEatBerries_Implementation(){
  if(Health<=0.f||bIsDead)return;
  if(!HasAuthority()||CountItem(ENyItemId::Berries)<=0||Hunger>=100.f)return;
- if(SpendItems(ENyItemId::Berries,1,ENyItemId::Wood,0))Hunger=FMath::Min(100.f,Hunger+18.f);
+ if(SpendItems(ENyItemId::Berries,1,ENyItemId::Wood,0)){
+  Hunger=FMath::Min(100.f,Hunger+18.f);
+  if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->RequestPlayerSave();
+ }
 }
 // Water is consumed only from the server-owned inventory: no client-provided
 // quantity/target, no refill while dead, and no free rehydration at full thirst.
@@ -306,6 +367,7 @@ void ANyCharacter::ServerDrinkWater_Implementation(){
   LastDrinkTime=Now;
   Thirst=FMath::Min(100.f,Thirst+35.f);
   ForceNetUpdate();
+  if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->RequestPlayerSave();
  }
 }
 void ANyCharacter::Tick(float DT){
@@ -318,6 +380,7 @@ void ANyCharacter::Tick(float DT){
  while(SurvivalAccumulator>=10.f){SurvivalAccumulator-=10.f;
  Hunger=FMath::Max(0.f,Hunger-1.f);Thirst=FMath::Max(0.f,Thirst-1.5f);
  if((Hunger<=0.f||Thirst<=0.f)&&!bIsDead)ReceiveCombatDamage(2.f,nullptr);
+  if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->RequestPlayerSave();
  }
 }
 void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
