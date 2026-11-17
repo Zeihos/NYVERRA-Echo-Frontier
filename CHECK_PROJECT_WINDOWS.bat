@@ -1,9 +1,12 @@
 @echo off
+setlocal EnableExtensions
 cd /d "%~dp0"
-where py >nul 2>&1
-if %errorlevel%==0 (
-  py -3 Tools\preflight_030.py
-) else (
-  python Tools\preflight_030.py
+title NYVERRA - Current project checks
+echo NYVERRA - актуальная проверка Alpha 0.61
+if not exist "TEST_ALPHA_061_WINDOWS.bat" (
+ echo [ERROR] Не найден TEST_ALPHA_061_WINDOWS.bat.
+ echo [ACTION] Выполните git pull origin main.
+ exit /b 2
 )
-pause
+call "%~dp0TEST_ALPHA_061_WINDOWS.bat" %*
+exit /b %errorlevel%
