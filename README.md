@@ -2,7 +2,7 @@
 
 Private Unreal Engine 5.8 C++ multiplayer survival prototype (Windows; PvP/PvE, building, crafting).
 
-**Latest sources: Alpha 0.59 (prototype) + Unreal Engine 5.8 compilation fixes.** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
+**Latest sources: Alpha 0.60 (prototype) + Unreal Engine 5.8 compilation fixes.** The tester successfully rebuilt and launched the project in Unreal Engine 5.8 and manually verified single-player PIE movement, sprint/jump, harvesting, inventory and melee combat. This is **not a release**; two-player network correctness, dedicated-server build, packaging, and a checked-in TestWorld map are **not yet verified**.
 
 ## First playable test map
 
@@ -134,3 +134,16 @@ Building type 2 adds an **owner-only locked door** with 280 HP and its own cost 
 This is a **functional source prototype**, not an animated finished door model. Current ownership uses the active `PlayerState`, not a durable account ID. Door permissions therefore do not survive server shutdown or account reconnect; full base persistence and group keys are future work.
 
 After `git pull origin main`, run `TEST_ALPHA_059_WINDOWS.bat` to run offline checks and attempt an **actual UE5.8 C++ editor build**. Follow [ALPHA_059_QA.md](ALPHA_059_QA.md) for required 2-player PIE verification. None of the 0.59 gameplay changes has been verified inside Unreal Editor yet.
+
+
+## Alpha 0.60 — persistent buildings and server ownership
+
+First server-side `USaveGame` persistence for **foundations, walls and locked doors**. Records have a server-generated `FGuid`, type, location, rotation, health and a non-replicated online owner key. Saves are per-level `NYVERRA_Bases_v1_<MapName>` slots under the SERVER's `Saved/SaveGames/`. The system reloads only fully validated v1 files, stops overwriting damaged or incompatible saves, and caps maps at 1024 pieces.
+
+- Server coalesces edits into a 3-second save, plus 60-second autosave.
+- Single-player Standalone retains ownership. Multiplayer owner rebind requires a trustworthy `PlayerState` online ID — **never a nickname**.
+- In PIE, saving to disk is intentionally disabled to protect real server world data.
+- Save files are **not part of Git**. Make a local backup after stopping the server using `Tools/Backup-NyverraBaseSaves.ps1`.
+- This saves **buildings only** (NOT players, inventories, resources, weather, accounts or seasonal wipes). Sudden power loss can still damage or lose recent saves, so run your own backup policy.
+
+Run `git pull origin main` then `TEST_ALPHA_060_WINDOWS.bat` on your UE5.8 Windows machine. After a successful compile, perform a genuine standalone restart and two-player login test using [ALPHA_060_QA.md](ALPHA_060_QA.md). Source changes have not yet been verified by compiling the 0.60 C++ in UE5.8 or by running a dedicated server.
