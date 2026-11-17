@@ -247,7 +247,20 @@ void ANyGameMode::SaveBases(){
   Entry.OwnerNetworkId=Piece->BuilderNetworkId;
  }
  if(!UGameplayStatics::SaveGameToSlot(Save,TargetSlot,0)){
-  UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] FAILED writing %s; previous slot preserved"),*TargetSlot);
+  bBaseSaveReadOnly=true; // Disk failure: block changes which cannot be persisted.
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] FAILED writing %s; world locked read-only"),*TargetSlot);
+  return;
+ }
+ // A reported successful write must be readable before we advance the
+ // generation. If verification fails, the other slot remains intact.
+ UNyBaseSaveGame* Verified=Cast<UNyBaseSaveGame>(
+  UGameplayStatics::LoadGameFromSlot(TargetSlot,0));
+ if(!Verified||Verified->FormatVersion!=1||
+    Verified->SaveRevision!=Save->SaveRevision||
+    Verified->MapName!=Save->MapName||
+    Verified->Pieces.Num()!=Save->Pieces.Num()){
+  bBaseSaveReadOnly=true;
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Read-back verification failed for %s; world locked read-only"),*TargetSlot);
   return;
  }
  BaseSaveRevision=Save->SaveRevision;
