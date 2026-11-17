@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/GameStateBase.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerStart.h"
@@ -78,6 +79,12 @@ void ANyGameMode::BeginPlay(){
   SpawnServerResources(); SpawnSiteResources(); SpawnSiteLoot(); SpawnEnemies();
   // Restore existing bases only on non-PIE authoritative worlds.
   LoadBases();
+  // In a listen server, the local player may log in BEFORE BeginPlay. Rebind
+  // such players as well as later arrivals handled by PostLogin.
+  if(AGameStateBase* State=GetWorld()->GetGameState()){
+   for(APlayerState* Player:State->PlayerArray)
+    BindPlayerToSavedBases(Player);
+  }
   if(ShouldPersistBases()&&!bBaseSaveReadOnly)
    GetWorldTimerManager().SetTimer(BaseAutosaveTimer,this,
     &ANyGameMode::SaveBases,60.f,true);
