@@ -40,6 +40,7 @@ private:
  bool ShouldPersistPlayers() const;
  FString PlayerPersistenceKey(const APlayerState* Player) const;
  FString PlayerSaveSlot(const FString& Key) const;
+ bool HasDuplicatePlayerIdentity(const ANyCharacter* Pawn,const FString& Key) const;
  void LoadPlayerState(ANyCharacter* Player);
  void SavePlayerState(ANyCharacter* Player);
  void SaveActivePlayers();
