@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="NYVERRA — монограмма N">
+<defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#101F2D"/><stop offset="1" stop-color="#07111C"/></linearGradient><linearGradient id="n" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#E0FFF7"/><stop offset=".5" stop-color="#75DAC8"/><stop offset="1" stop-color="#39A7AD"/></linearGradient></defs>
+<rect width="256" height="256" rx="54" fill="url(#b)"/><rect x="13" y="13" width="230" height="230" rx="43" stroke="#7EDFCF" stroke-opacity=".33" fill="none" stroke-width="2"/>
+<path d="M54 195V61H84L172 169V61H202V195H171L84 87V195Z" fill="url(#n)"/><path d="M48 208H210" stroke="#7EDFCF" stroke-opacity=".5" stroke-width="2"/>
+</svg>
