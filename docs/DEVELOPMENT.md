@@ -14,8 +14,7 @@
 ```bat
 git clone https://github.com/Zeihos/NYVERRA-Echo-Frontier.git
 cd NYVERRA-Echo-Frontier
-py -3 -m unittest discover -s Tools -p "test_alpha_*.py" -v
-TEST_ALPHA_061_WINDOWS.bat
+CHECK_PROJECT_WINDOWS.bat
 ```
 
 Последняя команда запускает Python-проверки и сборку `NYVERRAEditor` с использованием установленного UE5.8. При нестандартном пути движка:
