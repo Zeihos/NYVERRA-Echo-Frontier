@@ -1,0 +1,13 @@
+АРХИВНЫЙ ЖУРНАЛ NYVERRA ALPHA 0.20–0.22
+Сохранено при приведении репозитория к актуальному состоянию 17.11.2026.
+Текущий журнал: CHANGELOG.md в корне.
+
+Alpha 0.22 — introduced non-destructive editor Landscape map preparation script and source audit; refreshed testing checklist. No packaged binary or realistic assets yet.
+NYVERRA Alpha 0.20 (source-only)
+- Server raycasts for resource, loot, enemy and PlayerStart placement relative to world collision.
+- Local client raycasts for cosmetic tree/rock placement.
+- Skip runtime legacy flat floor on TestLandscape maps.
+- Added Landscape integration and test checklist.
+- No verified engine build, no claim of game-ready Landscape level.
+
+Alpha 0.21: POI elevations sampled from ground prior to spawning site geometry; fixed shadowing of XY identifier in forest generation; added editor landscape inspector and test checklist.
