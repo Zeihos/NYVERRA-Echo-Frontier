@@ -2,10 +2,10 @@
 setlocal EnableExtensions
 cd /d "%~dp0"
 title NYVERRA - Current project checks
-echo NYVERRA - актуальная проверка Alpha 0.61
+echo NYVERRA - current Alpha 0.61 source checks and UE build
 if not exist "TEST_ALPHA_061_WINDOWS.bat" (
- echo [ERROR] Не найден TEST_ALPHA_061_WINDOWS.bat.
- echo [ACTION] Выполните git pull origin main.
+ echo [ERROR] TEST_ALPHA_061_WINDOWS.bat not found.
+ echo [ACTION] Run git pull origin main.
  exit /b 2
 )
 call "%~dp0TEST_ALPHA_061_WINDOWS.bat" %*
