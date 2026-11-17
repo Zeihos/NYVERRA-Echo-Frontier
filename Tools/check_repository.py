@@ -25,8 +25,8 @@ DOCS = (
 REQUIRED = (
     "NYVERRA.uproject", "Source/NYVERRA/NYVERRA.Build.cs",
     "Source/NYVERRA/Private/NyGameMode.cpp", "Config/DefaultEngine.ini",
-    "CHECK_PROJECT_WINDOWS.bat", "TEST_ALPHA_061_WINDOWS.bat",
-    "Tools/test_alpha_061_offline.py", "Tools/check_repository.py",
+    "CHECK_PROJECT_WINDOWS.bat", "TEST_ALPHA_062_WINDOWS.bat",
+    "Tools/test_alpha_062_offline.py", "Tools/check_repository.py",
     ".github/workflows/nyverra-offline.yml", ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/PULL_REQUEST_TEMPLATE.md",
     "assets/brand/nyverra-cover.svg", "assets/brand/nyverra-mark.svg",
@@ -90,7 +90,7 @@ def run() -> int:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     if len(readme) > 12000:
         issues.append("README is too long for a useful project entry point")
-    if "Alpha 0.61" not in readme or "не релиз" not in readme.lower():
+    if "Alpha 0.62" not in readme or "не релиз" not in readme.lower():
         issues.append("README must show current alpha and unreleased status")
     if "assets/brand/nyverra-cover.svg" not in readme:
         issues.append("README lost the project branding header")
