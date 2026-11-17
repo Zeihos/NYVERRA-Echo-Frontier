@@ -212,8 +212,19 @@ void ANyGameMode::SaveBases(){
   ANyBuildPiece* Piece=*It;
   if(!IsValid(Piece)||Piece->Durability<=0.f)continue;
   if(!Piece->PersistentId.IsValid()){
-   UE_LOG(LogTemp,Warning,TEXT("[NYVERRA BaseSave] Ignoring building with no persistent GUID"));
-   continue;
+   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Building missing GUID; save untouched"));
+   return;
+  }
+  const FVector Position=Piece->GetActorLocation();
+  const FRotator Facing=Piece->GetActorRotation();
+  const float Maximum=Piece->PieceType==0?600.f:Piece->PieceType==1?360.f:280.f;
+  if(Piece->PieceType>2||Position.ContainsNaN()||Facing.ContainsNaN()||
+     FMath::Abs(Position.X)>5000.f||FMath::Abs(Position.Y)>5000.f||
+     FMath::Abs(Position.Z)>10000.f||
+     !FMath::IsFinite(Piece->Durability)||Piece->Durability>Maximum||
+     Piece->BuilderNetworkId.Len()>256){
+   UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Invalid live building; save untouched"));
+   return;
   }
   if(Seen.Contains(Piece->PersistentId)) {
    UE_LOG(LogTemp,Error,TEXT("[NYVERRA BaseSave] Duplicate GUID; refusing to overwrite save"));
