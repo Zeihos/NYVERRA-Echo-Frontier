@@ -139,6 +139,7 @@ void ANyCharacter::ServerMeleeAttack_Implementation(){
 void ANyCharacter::ReceiveCombatDamage(float Amount,ANyCharacter* Attacker){
  if(!HasAuthority()||bIsDead||!FMath::IsFinite(Amount)||Amount<=0.f)return;
  Health=FMath::Max(0.f,Health-FMath::Min(Amount,100.f));
+ if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->RequestPlayerSave();
  if(Health>0.f)return;
  bIsDead=true; DeathCount++;
  bWantsSprint=false;OnRep_Sprint();
