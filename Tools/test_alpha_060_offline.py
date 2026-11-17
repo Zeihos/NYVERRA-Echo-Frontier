@@ -35,7 +35,7 @@ class TestBasePersistence(unittest.TestCase):
         self.assertIn("W->WorldType==EWorldType::PIE", self.game)
         self.assertIn("NYVERRA_Bases_v1_", self.game)
         self.assertIn("GetCurrentLevelName(this,true)", self.game)
-        self.assertIn("SaveGameToSlot(Save,Slot,0)", self.game)
+        self.assertIn("SaveGameToSlot(Save,TargetSlot,0)", self.game)
         self.assertIn("LoadGameFromSlot(SlotA,0)", self.game)
         self.assertIn("LoadGameFromSlot(SlotB,0)", self.game)
         self.assertIn("DoesSaveGameExist(SlotA,0)", self.game)
