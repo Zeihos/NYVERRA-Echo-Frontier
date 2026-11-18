@@ -50,6 +50,8 @@ void ANyCharacter::SetupPlayerInputComponent(UInputComponent* Input){
  Input->BindAction(TEXT("RepairPiece"),IE_Pressed,this,&ANyCharacter::RepairPiece);
  Input->BindAction(TEXT("EatBerries"),IE_Pressed,this,&ANyCharacter::EatBerries);
  Input->BindAction(TEXT("DrinkWater"),IE_Pressed,this,&ANyCharacter::DrinkWater);
+ Input->BindAction(TEXT("CraftBandage"),IE_Pressed,this,&ANyCharacter::CraftBandage);
+ Input->BindAction(TEXT("UseBandage"),IE_Pressed,this,&ANyCharacter::UseBandage);
  Input->BindAction(TEXT("CraftAxe"),IE_Pressed,this,&ANyCharacter::CraftAxe);
  Input->BindAction(TEXT("CraftPickaxe"),IE_Pressed,this,&ANyCharacter::CraftPickaxe);
  Input->BindAction(TEXT("ToggleMouse"),IE_Pressed,this,&ANyCharacter::ToggleMouse);
@@ -83,6 +85,7 @@ FString ANyCharacter::GetItemName(ENyItemId Item){
  case ENyItemId::EchoShard: return TEXT("ECHO SHARD");
  case ENyItemId::Berries: return TEXT("BERRIES");
  case ENyItemId::Water: return TEXT("CLEAN WATER");
+ case ENyItemId::Bandage: return TEXT("BANDAGE");
  case ENyItemId::Axe: return TEXT("STONE AXE");
  case ENyItemId::Pickaxe: return TEXT("STONE PICKAXE");
  default: return TEXT("UNKNOWN");
@@ -147,7 +150,9 @@ void ANyCharacter::ReceiveCombatDamage(float Amount,ANyCharacter* Attacker){
  GetCharacterMovement()->DisableMovement();
  GetWorldTimerManager().SetTimer(RespawnTimer,this,&ANyCharacter::RespawnAfterDeath,8.f,false);
  ForceNetUpdate();
- if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->RequestPlayerSave();
+ // Persist the no-inventory death tombstone immediately, not after the
+ // 20-second coalescing window. This reduces item rollback on server failure.
+ if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->CheckpointPlayerDeath(this);
 }
 void ANyCharacter::RespawnAfterDeath(){
  if(!HasAuthority()||!bIsDead)return;
@@ -217,6 +222,8 @@ void ANyCharacter::PlaceDoor(){if(!bInventoryOpen&&!bIsDead)ServerPlacePiece(2);
 void ANyCharacter::RepairPiece(){if(!bInventoryOpen&&!bIsDead)ServerRepairPiece();}
 void ANyCharacter::EatBerries(){if(!bIsDead&&!bInventoryOpen)ServerEatBerries();}
 void ANyCharacter::DrinkWater(){if(!bIsDead&&!bInventoryOpen)ServerDrinkWater();}
+void ANyCharacter::CraftBandage(){if(!bIsDead&&!bInventoryOpen)ServerCraftBandage();}
+void ANyCharacter::UseBandage(){if(!bIsDead&&!bInventoryOpen)ServerUseBandage();}
 void ANyCharacter::CraftAxe(){if(!bInventoryOpen&&!bIsDead)ServerCraft(0);}
 void ANyCharacter::CraftPickaxe(){if(!bInventoryOpen&&!bIsDead)ServerCraft(1);}
 bool ANyCharacter::GiveLoot(ENyItemId Item,int32 Quantity){return HasAuthority()&&AddItem(Item,Quantity);}
@@ -371,6 +378,49 @@ void ANyCharacter::ServerDrinkWater_Implementation(){
   if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->RequestPlayerSave();
  }
 }
+// First medical recipe: two berries and one water produce one bandage.
+// The server simulates ingredient removal before charging, preventing a full
+// inventory from silently destroying items or manufacturing free healing.
+void ANyCharacter::ServerCraftBandage_Implementation(){
+ if(!HasAuthority()||bIsDead||Health<=0.f||
+    CountItem(ENyItemId::Berries)<2||CountItem(ENyItemId::Water)<1)return;
+ TArray<FNyItemStack> Preview=Inventory;
+ auto PreviewRemove=[&Preview](ENyItemId Kind,int32 Quantity){
+  for(int32 i=Preview.Num()-1;i>=0&&Quantity>0;--i){
+   if(Preview[i].Item!=Kind)continue;
+   const int32 Take=FMath::Min(Quantity,Preview[i].Quantity);
+   Preview[i].Quantity-=Take;Quantity-=Take;
+   if(Preview[i].Quantity==0)Preview.RemoveAt(i);
+  }
+ };
+ PreviewRemove(ENyItemId::Berries,2);
+ PreviewRemove(ENyItemId::Water,1);
+ bool bCapacity=Preview.Num()<MaxSlots;
+ for(const FNyItemStack& Stack:Preview)
+  if(Stack.Item==ENyItemId::Bandage&&Stack.Quantity<100)bCapacity=true;
+ if(!bCapacity)return;
+ if(!SpendItems(ENyItemId::Berries,2,ENyItemId::Water,1))return;
+ if(!AddItem(ENyItemId::Bandage,1)){
+  UE_LOG(LogTemp,Error,TEXT("[NYVERRA] Bandage craft rejected after capacity preflight"));
+  // No partial craft reward; restore the exact server-owned ingredients.
+  AddItem(ENyItemId::Berries,2);
+  AddItem(ENyItemId::Water,1);
+ }
+}
+
+void ANyCharacter::ServerUseBandage_Implementation(){
+ if(!HasAuthority()||bIsDead||Health<=0.f||Health>=100.f||
+    CountItem(ENyItemId::Bandage)<1||!GetWorld())return;
+ const float Now=GetWorld()->GetTimeSeconds();
+ if(Now-LastBandageTime<4.f)return;
+ if(!SpendItems(ENyItemId::Bandage,1,ENyItemId::Wood,0))return;
+ LastBandageTime=Now;
+ Health=FMath::Min(100.f,Health+35.f);
+ ForceNetUpdate();
+ if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())
+  GM->RequestPlayerSave();
+}
+
 void ANyCharacter::Tick(float DT){
  Super::Tick(DT);if(!HasAuthority()||bIsDead)return;
  const bool bMoving=GetVelocity().SizeSquared2D()>10000.f;
@@ -565,7 +615,11 @@ void ANyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
  Super::GetLifetimeReplicatedProps(OutLifetimeProps);
  DOREPLIFETIME(ANyCharacter,bWantsSprint);
  DOREPLIFETIME(ANyCharacter,bIsDead);DOREPLIFETIME(ANyCharacter,DeathCount);
- DOREPLIFETIME(ANyCharacter,Inventory);DOREPLIFETIME(ANyCharacter,Health);DOREPLIFETIME(ANyCharacter,Hunger);
- DOREPLIFETIME(ANyCharacter,Wood);DOREPLIFETIME(ANyCharacter,Stone);DOREPLIFETIME(ANyCharacter,Echo);
- DOREPLIFETIME(ANyCharacter,Berries);DOREPLIFETIME(ANyCharacter,Thirst);DOREPLIFETIME(ANyCharacter,Stamina);
+ DOREPLIFETIME_CONDITION(ANyCharacter,Inventory,COND_OwnerOnly);
+ DOREPLIFETIME(ANyCharacter,Health);DOREPLIFETIME(ANyCharacter,Hunger);
+ DOREPLIFETIME_CONDITION(ANyCharacter,Wood,COND_OwnerOnly);
+ DOREPLIFETIME_CONDITION(ANyCharacter,Stone,COND_OwnerOnly);
+ DOREPLIFETIME_CONDITION(ANyCharacter,Echo,COND_OwnerOnly);
+ DOREPLIFETIME_CONDITION(ANyCharacter,Berries,COND_OwnerOnly);
+ DOREPLIFETIME(ANyCharacter,Thirst);DOREPLIFETIME(ANyCharacter,Stamina);
 }
