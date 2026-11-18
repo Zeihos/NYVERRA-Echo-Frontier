@@ -5,7 +5,7 @@
 ## Description (About)
 
 ```text
-NYVERRA: Echo Frontier — survival-проект на Unreal Engine 5.8 (C++). Выживание, исследование, PvPvE и строительство баз. Alpha 0.62.
+NYVERRA: Echo Frontier — survival-проект на Unreal Engine 5.8 (C++). Выживание, исследование, PvPvE и строительство баз. Alpha 0.63.
 ```
 
 ## Topics
