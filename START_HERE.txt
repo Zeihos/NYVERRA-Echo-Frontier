@@ -1,4 +1,4 @@
-NYVERRA: ECHO FRONTIER — ТЕКУЩАЯ ВЕРСИЯ ALPHA 0.62
+NYVERRA: ECHO FRONTIER — ТЕКУЩАЯ ВЕРСИЯ ALPHA 0.63
 
 Этот файл сохранён для совместимости со старыми ссылками.
 Актуальный старт проекта:
@@ -7,7 +7,7 @@ NYVERRA: ECHO FRONTIER — ТЕКУЩАЯ ВЕРСИЯ ALPHA 0.62
 2. docs/STATUS.md — что уже есть и что ещё не проверено.
 3. docs/DEVELOPMENT.md — Windows / Unreal Engine 5.8, сборка, тесты.
 4. CHANGELOG.md — текущая история версий.
-5. ALPHA_062_QA.md — сценарий тестирования серверных сохранений.
+5. ALPHA_063_QA.md — сценарий тестирования серверных сохранений.
 
 Проверка в папке проекта:
   CHECK_PROJECT_WINDOWS.bat
