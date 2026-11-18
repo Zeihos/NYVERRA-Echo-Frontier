@@ -239,7 +239,7 @@ bool ANyCharacter::CapturePersistentState(UNyPlayerSaveGame* Save) const {
  for(const FNyItemStack& Stack:Inventory){
   const uint8 Id=static_cast<uint8>(Stack.Item);
   const int32 Limit=Stack.Item==ENyItemId::Axe||Stack.Item==ENyItemId::Pickaxe?1:100;
-  if(Id>static_cast<uint8>(ENyItemId::Water)||Stack.Quantity<1||Stack.Quantity>Limit)
+  if(Id>static_cast<uint8>(ENyItemId::Bandage)||Stack.Quantity<1||Stack.Quantity>Limit)
    return false;
   if(!bIsDead){
    FNySavedPlayerStack& Entry=Save->Inventory.AddDefaulted_GetRef();
@@ -259,7 +259,7 @@ bool ANyCharacter::ApplyPersistentState(const UNyPlayerSaveGame* Save){
  TArray<FNyItemStack> Restored;
  if(!Save->bWasDead){
   for(const FNySavedPlayerStack& Entry:Save->Inventory){
-   if(Entry.ItemId>static_cast<uint8>(ENyItemId::Water))return false;
+   if(Entry.ItemId>static_cast<uint8>(ENyItemId::Bandage))return false;
    const ENyItemId Item=static_cast<ENyItemId>(Entry.ItemId);
    const int32 Limit=Item==ENyItemId::Axe||Item==ENyItemId::Pickaxe?1:100;
    if(Entry.Quantity<1||Entry.Quantity>Limit)return false;
