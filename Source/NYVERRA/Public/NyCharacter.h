@@ -5,7 +5,8 @@
 class UCameraComponent;
 class UNyPlayerSaveGame;
 UENUM(BlueprintType)
-enum class ENyItemId : uint8 { Wood, Stone, EchoShard, Berries, Axe, Pickaxe, Water };
+// Append new item IDs only: numeric IDs 0-6 are already stored in SaveGame v1.
+enum class ENyItemId : uint8 { Wood, Stone, EchoShard, Berries, Axe, Pickaxe, Water, Bandage };
 USTRUCT(BlueprintType)
 struct FNyItemStack {
  GENERATED_BODY()
@@ -31,6 +32,8 @@ public:
  UFUNCTION(Server,Reliable) void ServerCraft(uint8 RecipeId);
  UFUNCTION(Server,Reliable) void ServerEatBerries();
  UFUNCTION(Server,Reliable) void ServerDrinkWater();
+ UFUNCTION(Server,Reliable) void ServerCraftBandage();
+ UFUNCTION(Server,Reliable) void ServerUseBandage();
  int32 CountItem(ENyItemId Item) const;
  // Server-only loot insertion with full inventory capacity validation.
  bool GiveLoot(ENyItemId Item,int32 Quantity);
@@ -64,6 +67,8 @@ private:
  void RepairPiece();
  void EatBerries();
  void DrinkWater();
+ void CraftBandage();
+ void UseBandage();
  void CraftAxe();
  void CraftPickaxe();
  void MeleeAttack();
@@ -78,6 +83,7 @@ private:
  float SurvivalAccumulator=0.f;
  float LastInteractionTime=-100.f;
  float LastDrinkTime=-100.f;
+ float LastBandageTime=-100.f;
  float LastBuildTime=-100.f;
  float LastRepairTime=-100.f;
  void ToggleMouse();
