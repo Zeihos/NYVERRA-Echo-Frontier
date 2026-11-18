@@ -46,7 +46,7 @@ class TestPersistentPlayerState(unittest.TestCase):
         restore=self.char.split("bool ANyCharacter::ApplyPersistentState(")[1].split(
             "void ANyCharacter::RefreshLegacyCounters(")[0]
         for token in ("Inventory.Num()>MaxSlots", "Stack.Quantity<1",
-                      "Stack.Quantity>Limit", "ENyItemId::Water",
+                      "Stack.Quantity>Limit", "ENyItemId::Bandage",
                       "Save->Inventory.Reset()", "if(!bIsDead)"):
             self.assertIn(token, capture)
         for token in ("if(!Save->bWasDead)", "Entry.Quantity>Limit",
