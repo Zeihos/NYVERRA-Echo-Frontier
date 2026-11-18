@@ -32,7 +32,7 @@ class TestWaterSurvivalLoop(unittest.TestCase):
         impl = source("Source/NYVERRA/Private/NyCharacter.cpp")
         self.assertIn("UFUNCTION(Server,Reliable) void ServerDrinkWater();", header)
         drink = impl.split("void ANyCharacter::ServerDrinkWater_Implementation(){")[1].split(
-            "void ANyCharacter::Tick(float DT)")[0]
+            "void ANyCharacter::ServerCraftBandage_Implementation(){")[0]
         self.assertIn("!HasAuthority()", drink)
         self.assertIn("bIsDead", drink)
         self.assertIn("Thirst>=100.f", drink)
