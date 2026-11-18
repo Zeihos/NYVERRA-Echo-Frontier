@@ -19,7 +19,7 @@ class TestWaterSurvivalLoop(unittest.TestCase):
         items = source("Source/NYVERRA/Public/NyCharacter.h")
         resources = source("Source/NYVERRA/Public/NyResource.h")
         self.assertIn(
-            "enum class ENyItemId : uint8 { Wood, Stone, EchoShard, Berries, Axe, Pickaxe, Water };",
+            "enum class ENyItemId : uint8 { Wood, Stone, EchoShard, Berries, Axe, Pickaxe, Water, Bandage };",
             items,
         )
         self.assertIn(
