@@ -425,6 +425,15 @@ bool ANyGameMode::HasDuplicatePlayerIdentity(const ANyCharacter* Pawn,
  return false;
 }
 
+void ANyGameMode::CheckpointPlayerDeath(ANyCharacter* Player){
+ // Server-authoritative death should be durable before the eight-second
+ // respawn. SavePlayerState captures a tombstone with NO inventory contents.
+ // Failed/unsafe writes are protected by the existing A/B slot guard.
+ if(!HasAuthority()||!IsValid(Player)||!Player->HasAuthority()||
+    !Player->bIsDead||Player->Health>0.f)return;
+ SavePlayerState(Player);
+}
+
 void ANyGameMode::RequestPlayerSave(){
  if(!ShouldPersistPlayers()||bLoadingPlayerState)return;
  // Multiple inventory operations / survival ticks share one disk write.
@@ -445,7 +454,7 @@ static bool NyValidPlayerSnapshot(const UNyPlayerSaveGame* Save,
  if((!Save->bWasDead&&Save->Health<=0.f)||
     (Save->bWasDead&&Save->Inventory.Num()>0))return false;
  for(const FNySavedPlayerStack& Entry:Save->Inventory){
-  if(Entry.ItemId>static_cast<uint8>(ENyItemId::Water))return false;
+  if(Entry.ItemId>static_cast<uint8>(ENyItemId::Bandage))return false;
   const bool bTool=Entry.ItemId==static_cast<uint8>(ENyItemId::Axe)||
                    Entry.ItemId==static_cast<uint8>(ENyItemId::Pickaxe);
   if(Entry.Quantity<=0||Entry.Quantity>(bTool?1:100))return false;
