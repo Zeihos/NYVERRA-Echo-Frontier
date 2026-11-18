@@ -21,6 +21,8 @@ public:
  void RequestBaseSave();
  // Debounced server-only player inventory/survival save.
  void RequestPlayerSave();
+ // Write a death-state checkpoint synchronously before the respawn timer.
+ void CheckpointPlayerDeath(ANyCharacter* Player);
  // Fail closed if an incompatible save was detected: do not charge players
  // for structures that cannot be written back to the same save slot.
  bool CanPlaceBasePieces() const { return CanMutateBaseWorld(); }
