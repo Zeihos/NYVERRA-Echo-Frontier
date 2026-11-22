@@ -13,7 +13,8 @@ ANyLootCrate::ANyLootCrate(){
  Mesh->SetCollisionProfileName(TEXT("BlockAll"));
 }
 void ANyLootCrate::Configure(ENyItemId Item,int32 Count,float Seconds){
- if(!HasAuthority())return;
+ if(!HasAuthority()||static_cast<uint8>(Item)>static_cast<uint8>(ENyItemId::Bandage)||
+    Count<=0||!FMath::IsFinite(Seconds))return;
  RewardItem=Item;RewardCount=FMath::Clamp(Count,1,100);RespawnSeconds=FMath::Max(10.f,Seconds);
 }
 bool ANyLootCrate::TryLoot(ANyCharacter* Player){
