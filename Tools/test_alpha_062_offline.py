@@ -78,7 +78,7 @@ class TestPersistentPlayerState(unittest.TestCase):
         for token in ("Save->OwnerDigest!=Digest","Save->MapName!=Map",
                       "Save->Inventory.Num()>16", "Save->SaveRevision<0",
                       "FMath::IsFinite(Value)", "Entry.ItemId>",
-                      "Entry.Quantity<=0", "Save->bWasDead&&Save->Inventory.Num()>0"):
+                      "Entry.Quantity<=0", "Save->bWasDead&&(Save->Health>0.f||Save->Inventory.Num()>0)"):
             self.assertIn(token,checks)
 
     def test_read_back_verifies_items_and_revision(self):
