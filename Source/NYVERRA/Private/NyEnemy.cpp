@@ -109,7 +109,9 @@ void ANyEnemy::Think(){
   MoveToward(PatrolPoint);return;
  }
  const FVector Delta=Victim->GetActorLocation()-GetActorLocation();
- const float Distance=Delta.Size2D();
+ // Melee range must use full 3D distance. 2D range allowed attacks against
+ // players far above/below the enemy on platforms or vertical terrain.
+ const float Distance=Delta.Size();
  if(Distance>AttackRadius){MoveToward(Victim->GetActorLocation());return;}
  if(Now-LastAttackTime<1.5f || Victim->bIsDead)return;
  FCollisionQueryParams Sight(SCENE_QUERY_STAT(NyEnemyAttackSight),false,this);
