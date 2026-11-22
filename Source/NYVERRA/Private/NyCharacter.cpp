@@ -145,6 +145,10 @@ void ANyCharacter::ReceiveCombatDamage(float Amount,ANyCharacter* Attacker){
  if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->RequestPlayerSave();
  if(Health>0.f)return;
  bIsDead=true; DeathCount++;
+ // Inventory loss is authoritative at death, not delayed until respawn.
+ // Prevent stale loot from lingering on the dying pawn for eight seconds.
+ Inventory.Reset();
+ RefreshLegacyCounters();
  bWantsSprint=false;OnRep_Sprint();
  GetCharacterMovement()->StopMovementImmediately();
  GetCharacterMovement()->DisableMovement();
