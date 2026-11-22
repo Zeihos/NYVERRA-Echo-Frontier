@@ -329,7 +329,9 @@ bool ANyCharacter::SpendItems(ENyItemId A,int32 ACount,ENyItemId B,int32 BCount)
 }
 void ANyCharacter::ServerCraft_Implementation(uint8 RecipeId){
  if(Health<=0.f||bIsDead)return;
- if(!HasAuthority()||RecipeId>1)return;
+ if(!HasAuthority()||RecipeId>1||!GetWorld())return;
+ const float CraftNow=GetWorld()->GetTimeSeconds();
+ if(CraftNow-LastCraftTime<0.25f)return;
  const ENyItemId Result=RecipeId==0?ENyItemId::Axe:ENyItemId::Pickaxe;
  const int32 WoodCost=RecipeId==0?3:2;
  const int32 StoneCost=RecipeId==0?2:4;
@@ -358,8 +360,9 @@ void ANyCharacter::ServerCraft_Implementation(uint8 RecipeId){
   UE_LOG(LogTemp, Error, TEXT("[NYVERRA] Craft inventory invariant failed"));
   AddItem(ENyItemId::Wood, WoodCost);
   AddItem(ENyItemId::Stone, StoneCost);
+  return;
  }
-
+ LastCraftTime=CraftNow;
 }
 void ANyCharacter::ServerEatBerries_Implementation(){
  if(Health<=0.f||bIsDead)return;
@@ -386,8 +389,10 @@ void ANyCharacter::ServerDrinkWater_Implementation(){
 // The server simulates ingredient removal before charging, preventing a full
 // inventory from silently destroying items or manufacturing free healing.
 void ANyCharacter::ServerCraftBandage_Implementation(){
- if(!HasAuthority()||bIsDead||Health<=0.f||
+ if(!HasAuthority()||bIsDead||Health<=0.f||!GetWorld()||
     CountItem(ENyItemId::Berries)<2||CountItem(ENyItemId::Water)<1)return;
+ const float CraftNow=GetWorld()->GetTimeSeconds();
+ if(CraftNow-LastCraftTime<0.25f)return;
  TArray<FNyItemStack> Preview=Inventory;
  auto PreviewRemove=[&Preview](ENyItemId Kind,int32 Quantity){
   for(int32 i=Preview.Num()-1;i>=0&&Quantity>0;--i){
@@ -409,7 +414,9 @@ void ANyCharacter::ServerCraftBandage_Implementation(){
   // No partial craft reward; restore the exact server-owned ingredients.
   AddItem(ENyItemId::Berries,2);
   AddItem(ENyItemId::Water,1);
+  return;
  }
+ LastCraftTime=CraftNow;
 }
 
 void ANyCharacter::ServerUseBandage_Implementation(){
