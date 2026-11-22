@@ -451,8 +451,10 @@ static bool NyValidPlayerSnapshot(const UNyPlayerSaveGame* Save,
     Save->DeathCount<0||Save->DeathCount>1000000)return false;
  const float Values[]={Save->Health,Save->Hunger,Save->Thirst,Save->Stamina};
  for(float Value:Values)if(!FMath::IsFinite(Value)||Value<0.f||Value>100.f)return false;
+ // A death checkpoint must have zero HP and no inventory. Otherwise a
+ // corrupted newer save could resurrect lost loot after reconnecting.
  if((!Save->bWasDead&&Save->Health<=0.f)||
-    (Save->bWasDead&&Save->Inventory.Num()>0))return false;
+    (Save->bWasDead&&(Save->Health>0.f||Save->Inventory.Num()>0)))return false;
  for(const FNySavedPlayerStack& Entry:Save->Inventory){
   if(Entry.ItemId>static_cast<uint8>(ENyItemId::Bandage))return false;
   const bool bTool=Entry.ItemId==static_cast<uint8>(ENyItemId::Axe)||

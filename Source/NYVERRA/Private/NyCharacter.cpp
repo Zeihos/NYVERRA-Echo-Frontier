@@ -145,6 +145,10 @@ void ANyCharacter::ReceiveCombatDamage(float Amount,ANyCharacter* Attacker){
  if(ANyGameMode* GM=GetWorld()->GetAuthGameMode<ANyGameMode>())GM->RequestPlayerSave();
  if(Health>0.f)return;
  bIsDead=true; DeathCount++;
+ // Inventory loss is authoritative at death, not delayed until respawn.
+ // Prevent stale loot from lingering on the dying pawn for eight seconds.
+ Inventory.Reset();
+ RefreshLegacyCounters();
  bWantsSprint=false;OnRep_Sprint();
  GetCharacterMovement()->StopMovementImmediately();
  GetCharacterMovement()->DisableMovement();
@@ -292,7 +296,8 @@ void ANyCharacter::RefreshLegacyCounters(){
  }
 }
 bool ANyCharacter::AddItem(ENyItemId Item,int32 Quantity){
- if(!HasAuthority()||Quantity<=0)return false;
+ if(!HasAuthority()||Quantity<=0||
+    static_cast<uint8>(Item)>static_cast<uint8>(ENyItemId::Bandage))return false;
  const int32 MaxStack=(Item==ENyItemId::Axe||Item==ENyItemId::Pickaxe)?1:100;
  int32 Space=0;
  for(const FNyItemStack& Stack:Inventory) if(Stack.Item==Item) Space+=MaxStack-Stack.Quantity;
@@ -325,7 +330,9 @@ bool ANyCharacter::SpendItems(ENyItemId A,int32 ACount,ENyItemId B,int32 BCount)
 }
 void ANyCharacter::ServerCraft_Implementation(uint8 RecipeId){
  if(Health<=0.f||bIsDead)return;
- if(!HasAuthority()||RecipeId>1)return;
+ if(!HasAuthority()||RecipeId>1||!GetWorld())return;
+ const float CraftNow=GetWorld()->GetTimeSeconds();
+ if(CraftNow-LastCraftTime<0.25f)return;
  const ENyItemId Result=RecipeId==0?ENyItemId::Axe:ENyItemId::Pickaxe;
  const int32 WoodCost=RecipeId==0?3:2;
  const int32 StoneCost=RecipeId==0?2:4;
@@ -354,8 +361,9 @@ void ANyCharacter::ServerCraft_Implementation(uint8 RecipeId){
   UE_LOG(LogTemp, Error, TEXT("[NYVERRA] Craft inventory invariant failed"));
   AddItem(ENyItemId::Wood, WoodCost);
   AddItem(ENyItemId::Stone, StoneCost);
+  return;
  }
-
+ LastCraftTime=CraftNow;
 }
 void ANyCharacter::ServerEatBerries_Implementation(){
  if(Health<=0.f||bIsDead)return;
@@ -382,8 +390,10 @@ void ANyCharacter::ServerDrinkWater_Implementation(){
 // The server simulates ingredient removal before charging, preventing a full
 // inventory from silently destroying items or manufacturing free healing.
 void ANyCharacter::ServerCraftBandage_Implementation(){
- if(!HasAuthority()||bIsDead||Health<=0.f||
+ if(!HasAuthority()||bIsDead||Health<=0.f||!GetWorld()||
     CountItem(ENyItemId::Berries)<2||CountItem(ENyItemId::Water)<1)return;
+ const float CraftNow=GetWorld()->GetTimeSeconds();
+ if(CraftNow-LastCraftTime<0.25f)return;
  TArray<FNyItemStack> Preview=Inventory;
  auto PreviewRemove=[&Preview](ENyItemId Kind,int32 Quantity){
   for(int32 i=Preview.Num()-1;i>=0&&Quantity>0;--i){
@@ -405,7 +415,9 @@ void ANyCharacter::ServerCraftBandage_Implementation(){
   // No partial craft reward; restore the exact server-owned ingredients.
   AddItem(ENyItemId::Berries,2);
   AddItem(ENyItemId::Water,1);
+  return;
  }
+ LastCraftTime=CraftNow;
 }
 
 void ANyCharacter::ServerUseBandage_Implementation(){
@@ -482,6 +494,9 @@ void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  // door would bypass the base layout and could be used to block spawn routes.
  if(Type==2 && (!Foundation || Foundation->PieceType!=0))return;
  if(Foundation && (Type==0 || Foundation->PieceType!=0))return;
+ // Never let a remote player attach walls/doors to somebody else's base.
+ // Ownership is checked on the server, never supplied by the client RPC.
+ if(Foundation && !Foundation->IsBuildOwner(GetPlayerState()))return;
  if(GroundHit.ImpactNormal.Z<0.85f || !GroundHit.GetComponent())return;
  // Authoritative foundations are explicit valid supports even if their
  // runtime-spawned mesh component reports Movable on this engine version.

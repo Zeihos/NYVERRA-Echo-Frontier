@@ -23,6 +23,9 @@ if errorlevel 1 (echo [ERROR] Repository check failed.&exit /b 5)
 echo [3/4] Run all Alpha source regression checks...
 py -3 -m unittest discover -s Tools -p "test_alpha_*.py" -v
 if errorlevel 1 (echo [ERROR] Python source tests failed.&exit /b 6)
+echo [INFO] Checking playable map readiness (report only)...
+py -3 Tools\check_runtime_readiness.py
+if errorlevel 1 (echo [ERROR] Runtime readiness diagnostic failed.&exit /b 8)
 echo [4/4] Build UE 5.8 NYVERRAEditor...
 call "%~dp0BUILD_ALPHA_051_WINDOWS.bat" "%~1"
 if errorlevel 1 (

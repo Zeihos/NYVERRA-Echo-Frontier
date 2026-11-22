@@ -85,7 +85,8 @@ void ANyEnemy::Think(){
     Params.AddIgnoredActor(Candidate);
     const FVector Eye=GetActorLocation()+FVector(0,0,50.f);
     const FVector TargetEye=Candidate->GetActorLocation()+FVector(0,0,50.f);
-    if(W->LineTraceSingleByChannel(Hit,Eye,TargetEye,ECC_WorldStatic,Params))continue;
+    // Visibility must account for both static terrain and blocking dynamic base pieces.
+    if(W->LineTraceSingleByChannel(Hit,Eye,TargetEye,ECC_Visibility,Params))continue;
     BestSq=D;Target=Candidate;
    }
   }
@@ -108,12 +109,14 @@ void ANyEnemy::Think(){
   MoveToward(PatrolPoint);return;
  }
  const FVector Delta=Victim->GetActorLocation()-GetActorLocation();
- const float Distance=Delta.Size2D();
+ // Melee range must use full 3D distance. 2D range allowed attacks against
+ // players far above/below the enemy on platforms or vertical terrain.
+ const float Distance=Delta.Size();
  if(Distance>AttackRadius){MoveToward(Victim->GetActorLocation());return;}
  if(Now-LastAttackTime<1.5f || Victim->bIsDead)return;
  FCollisionQueryParams Sight(SCENE_QUERY_STAT(NyEnemyAttackSight),false,this);
  Sight.AddIgnoredActor(Victim);
- if(W->LineTraceTestByChannel(GetActorLocation()+FVector(0,0,50.f),Victim->GetActorLocation()+FVector(0,0,50.f),ECC_WorldStatic,Sight))return;
+ if(W->LineTraceTestByChannel(GetActorLocation()+FVector(0,0,50.f),Victim->GetActorLocation()+FVector(0,0,50.f),ECC_Visibility,Sight))return;
  LastAttackTime=Now;
  Victim->ReceiveCombatDamage(10.f,nullptr);
 }
