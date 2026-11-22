@@ -296,7 +296,8 @@ void ANyCharacter::RefreshLegacyCounters(){
  }
 }
 bool ANyCharacter::AddItem(ENyItemId Item,int32 Quantity){
- if(!HasAuthority()||Quantity<=0)return false;
+ if(!HasAuthority()||Quantity<=0||
+    static_cast<uint8>(Item)>static_cast<uint8>(ENyItemId::Bandage))return false;
  const int32 MaxStack=(Item==ENyItemId::Axe||Item==ENyItemId::Pickaxe)?1:100;
  int32 Space=0;
  for(const FNyItemStack& Stack:Inventory) if(Stack.Item==Item) Space+=MaxStack-Stack.Quantity;
