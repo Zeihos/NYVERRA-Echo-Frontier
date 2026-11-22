@@ -26,12 +26,18 @@ if not exist "%CD%\Content\Maps\TestWorld.umap" (
  echo [ERROR] TestWorld.umap was not saved. Review "%LOG%"
  exit /b 7
 )
-findstr /B /C:"GameDefaultMap=/Game/Maps/TestWorld" "%CD%\Config\DefaultEngine.ini" >nul
-if errorlevel 1 (echo [ERROR] GameDefaultMap not configured. See "%LOG%" & exit /b 8)
-findstr /B /C:"EditorStartupMap=/Game/Maps/TestWorld" "%CD%\Config\DefaultEngine.ini" >nul
-if errorlevel 1 (echo [ERROR] EditorStartupMap not configured. See "%LOG%" & exit /b 9)
-findstr /B /C:"ServerDefaultMap=/Game/Maps/TestWorld" "%CD%\Config\DefaultEngine.ini" >nul
-if errorlevel 1 (echo [ERROR] ServerDefaultMap not configured. See "%LOG%" & exit /b 10)
+rem Strict validation checks all three map paths and the on-disk .umap.
+rem Unlike findstr, this rejects prefix matches and malformed/unrelated INI values.
+where py >nul 2>&1
+if errorlevel 1 (
+ echo [ERROR] Python launcher not found. Cannot verify map configuration.
+ exit /b 8
+)
+py -3 "%CD%\Tools\check_runtime_readiness.py" --strict
+if errorlevel 1 (
+ echo [ERROR] TestWorld startup configuration or saved map is not ready.
+ exit /b 9
+)
 
 echo [SUCCESS] C++ editor target built and TestWorld saved/configured.
 echo [NEXT] Open NYVERRA.uproject, Build Navigation, save map, run PIE 2 players.
