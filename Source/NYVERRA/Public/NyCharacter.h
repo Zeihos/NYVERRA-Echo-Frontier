@@ -83,6 +83,7 @@ private:
  float SurvivalAccumulator=0.f;
  float LastInteractionTime=-100.f;
  float LastDrinkTime=-100.f;
+ float LastCraftTime=-100.f;
  float LastBandageTime=-100.f;
  float LastBuildTime=-100.f;
  float LastRepairTime=-100.f;
