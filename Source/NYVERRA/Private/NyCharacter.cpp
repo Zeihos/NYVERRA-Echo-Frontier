@@ -482,6 +482,9 @@ void ANyCharacter::ServerPlacePiece_Implementation(uint8 Type){
  // door would bypass the base layout and could be used to block spawn routes.
  if(Type==2 && (!Foundation || Foundation->PieceType!=0))return;
  if(Foundation && (Type==0 || Foundation->PieceType!=0))return;
+ // Never let a remote player attach walls/doors to somebody else's base.
+ // Ownership is checked on the server, never supplied by the client RPC.
+ if(Foundation && !Foundation->IsBuildOwner(GetPlayerState()))return;
  if(GroundHit.ImpactNormal.Z<0.85f || !GroundHit.GetComponent())return;
  // Authoritative foundations are explicit valid supports even if their
  // runtime-spawned mesh component reports Movable on this engine version.
